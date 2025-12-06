@@ -1,6 +1,5 @@
-package com.echoproject.echo.repository;
+package com.echoproject.echo.user.repository;
 
-import com.echoproject.echo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

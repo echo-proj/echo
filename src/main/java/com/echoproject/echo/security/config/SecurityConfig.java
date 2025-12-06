@@ -1,6 +1,6 @@
-package com.echoproject.echo.config;
+package com.echoproject.echo.security.config;
 
-import com.echoproject.echo.security.JwtAuthenticationFilter;
+import com.echoproject.echo.security.filter.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

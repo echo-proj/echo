@@ -1,4 +1,4 @@
-package com.echoproject.echo.dto;
+package com.echoproject.echo.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

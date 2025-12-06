@@ -1,4 +1,4 @@
-package com.echoproject.echo.util;
+package com.echoproject.echo.common.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

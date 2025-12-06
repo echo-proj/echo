@@ -1,9 +1,9 @@
-package com.echoproject.echo.entity;
+package com.echoproject.echo.user.repository;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -35,4 +35,9 @@ public class User {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
 }

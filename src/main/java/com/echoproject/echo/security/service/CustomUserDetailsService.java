@@ -1,7 +1,7 @@
-package com.echoproject.echo.security;
+package com.echoproject.echo.security.service;
 
-import com.echoproject.echo.entity.User;
-import com.echoproject.echo.repository.UserRepository;
+import com.echoproject.echo.user.repository.User;
+import com.echoproject.echo.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

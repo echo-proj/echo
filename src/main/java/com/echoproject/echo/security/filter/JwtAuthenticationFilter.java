@@ -1,6 +1,6 @@
-package com.echoproject.echo.security;
+package com.echoproject.echo.security.filter;
 
-import com.echoproject.echo.util.JwtUtil;
+import com.echoproject.echo.common.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

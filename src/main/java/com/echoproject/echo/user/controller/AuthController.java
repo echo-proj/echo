@@ -1,9 +1,9 @@
-package com.echoproject.echo.controller;
+package com.echoproject.echo.user.controller;
 
-import com.echoproject.echo.dto.AuthResponse;
-import com.echoproject.echo.dto.LoginRequest;
-import com.echoproject.echo.dto.RegisterRequest;
-import com.echoproject.echo.service.AuthService;
+import com.echoproject.echo.user.dto.AuthResponse;
+import com.echoproject.echo.user.dto.LoginRequest;
+import com.echoproject.echo.user.dto.RegisterRequest;
+import com.echoproject.echo.user.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

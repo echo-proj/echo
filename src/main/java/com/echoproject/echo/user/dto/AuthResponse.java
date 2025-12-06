@@ -1,4 +1,4 @@
-package com.echoproject.echo.dto;
+package com.echoproject.echo.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
