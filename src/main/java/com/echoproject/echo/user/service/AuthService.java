@@ -7,6 +7,8 @@ import com.echoproject.echo.user.dto.AuthResponse;
 import com.echoproject.echo.user.dto.LoginRequest;
 import com.echoproject.echo.user.dto.RegisterRequest;
 import com.echoproject.echo.user.models.User;
+import com.echoproject.echo.user.models.UserProfile;
+import com.echoproject.echo.user.repository.UserProfileRepository;
 import com.echoproject.echo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
   private final UserRepository userRepository;
+  private final UserProfileRepository userProfileRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtUtil jwtUtil;
   private final AuthenticationManager authenticationManager;
@@ -30,6 +33,10 @@ public class AuthService {
 
     User user = new User(request.getUsername(), passwordEncoder.encode(request.getPassword()));
     userRepository.save(user);
+
+    UserProfile profile = new UserProfile();
+    profile.setUser(user);
+    userProfileRepository.save(profile);
 
     String token = jwtUtil.generateToken(user.getUsername());
     return new AuthResponse(token, user.getUsername());

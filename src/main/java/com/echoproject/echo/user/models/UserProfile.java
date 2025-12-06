@@ -1,44 +1,42 @@
 package com.echoproject.echo.user.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user_profiles")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class UserProfile {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @NotBlank
-  @Column(unique = true, nullable = false)
-  private String username;
+  @OneToOne
+  @JoinColumn(name = "user_id", nullable = false, unique = true)
+  private User user;
 
-  @NotBlank
-  @Column(nullable = false)
-  private String password;
+  @Column(name = "full_name")
+  private String fullName;
+
+  @Column(name = "phone_number")
+  private String phoneNumber;
+
+  @Column(name = "profile_picture")
+  private String profilePicture;
 
   @CreationTimestamp
   @Column(updatable = false)
   private LocalDateTime createdAt;
 
   @UpdateTimestamp private LocalDateTime updatedAt;
-
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private UserProfile profile;
-
-  public User(String username, String password) {
-    this.username = username;
-    this.password = password;
-  }
 }
