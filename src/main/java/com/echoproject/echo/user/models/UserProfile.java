@@ -2,6 +2,7 @@ package com.echoproject.echo.user.models;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,8 +19,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class UserProfile {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @OneToOne
   @JoinColumn(name = "user_id", nullable = false, unique = true)
