@@ -2,13 +2,13 @@ package com.echoproject.echo.integration.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.echoproject.echo.user.dto.AuthResponse;
-import com.echoproject.echo.user.dto.LoginRequest;
 import com.echoproject.echo.user.dto.RegisterRequest;
-import com.echoproject.echo.user.models.User;
+import com.echoproject.echo.user.dto.UserProfileRequest;
+import com.echoproject.echo.user.dto.UserProfileResponse;
 import com.echoproject.echo.user.repository.UserProfileRepository;
 import com.echoproject.echo.user.repository.UserRepository;
 import com.echoproject.echo.user.service.AuthService;
+import com.echoproject.echo.user.service.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,9 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class AuthServiceIntegrationTest {
+class UserProfileServiceIntegrationTest {
+
+  @Autowired private UserProfileService userProfileService;
 
   @Autowired private AuthService authService;
 
@@ -32,27 +34,7 @@ class AuthServiceIntegrationTest {
   }
 
   @Test
-  void shouldRegisterUserSuccessfully() {
-    // Given
-    RegisterRequest request = new RegisterRequest();
-    request.setUsername("testuser");
-    request.setPassword("password123");
-
-    // When
-    AuthResponse response = authService.register(request);
-
-    // Then
-    assertThat(response).isNotNull();
-    assertThat(response.getToken()).isNotBlank();
-    assertThat(response.getUsername()).isEqualTo("testuser");
-
-    // Assert
-    User user = userRepository.findByUsername("testuser").orElseThrow();
-    assertThat(userProfileRepository.findByUserId(user.getId())).isPresent();
-  }
-
-  @Test
-  void shouldLoginUserSuccessfully() {
+  void shouldGetProfileSuccessfully() {
     // Given
     RegisterRequest registerRequest = new RegisterRequest();
     registerRequest.setUsername("testuser");
@@ -60,14 +42,38 @@ class AuthServiceIntegrationTest {
     authService.register(registerRequest);
 
     // When
-    LoginRequest loginRequest = new LoginRequest();
-    loginRequest.setUsername("testuser");
-    loginRequest.setPassword("password123");
-    AuthResponse response = authService.login(loginRequest);
+    UserProfileResponse response = userProfileService.getProfile("testuser");
 
     // Then
     assertThat(response).isNotNull();
-    assertThat(response.getToken()).isNotBlank();
     assertThat(response.getUsername()).isEqualTo("testuser");
+    assertThat(response.getFullName()).isNull();
+    assertThat(response.getPhoneNumber()).isNull();
+    assertThat(response.getProfilePicture()).isNull();
+  }
+
+  @Test
+  void shouldUpdateProfileSuccessfully() {
+    // Given
+    RegisterRequest registerRequest = new RegisterRequest();
+    registerRequest.setUsername("testuser");
+    registerRequest.setPassword("password123");
+    authService.register(registerRequest);
+
+    UserProfileRequest updateRequest = new UserProfileRequest();
+    updateRequest.setFullName("John Doe");
+    updateRequest.setPhoneNumber("+1234567890");
+    updateRequest.setProfilePicture("https://example.com/profile.jpg");
+
+    // When
+    UserProfileResponse response =
+        userProfileService.updateProfile("testuser", updateRequest);
+
+    // Then
+    assertThat(response).isNotNull();
+    assertThat(response.getUsername()).isEqualTo("testuser");
+    assertThat(response.getFullName()).isEqualTo("John Doe");
+    assertThat(response.getPhoneNumber()).isEqualTo("+1234567890");
+    assertThat(response.getProfilePicture()).isEqualTo("https://example.com/profile.jpg");
   }
 }
