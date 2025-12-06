@@ -30,7 +30,7 @@ public class DocumentService {
 
   @Transactional
   public DocumentResponse createDocument(UUID userId, CreateDocumentRequest request) {
-    User owner = userRepository.getReferenceById(userId);
+    User owner = userRepository.findById(userId).orElseThrow();
 
     Document document = new Document(request.getTitle(), owner);
     documentRepository.save(document);
@@ -38,11 +38,13 @@ public class DocumentService {
     return toResponse(document);
   }
 
+  @Transactional(readOnly = true)
   public List<DocumentResponse> getUserDocuments(UUID userId) {
     List<Document> documents = documentRepository.findAllAccessibleByUser(userId);
     return documents.stream().map(this::toResponse).toList();
   }
 
+  @Transactional(readOnly = true)
   public DocumentResponse getDocument(UUID userId, UUID documentId) {
     Document document =
         documentRepository
