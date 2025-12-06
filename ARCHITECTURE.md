@@ -26,9 +26,10 @@ We follow the **Functional Core, Imperative Shell** pattern:
 
 **Controller (Entry Point)**
 - Accept and parse HTTP requests
-- Validate input
+- **Validate input using Bean Validation annotations** (`@Valid`, `@NotBlank`, etc.)
 - Call service layer
 - Return HTTP responses
+- **Owns all request-level validation** - domain should NOT re-validate request inputs
 
 **Service (Imperative Shell)**
 - Orchestrate the workflow
@@ -39,10 +40,11 @@ We follow the **Functional Core, Imperative Shell** pattern:
 
 **Domain (Functional Core)**
 - Pure, immutable functions
-- Contains all business logic
+- Contains **business logic only** (not input validation)
 - No side effects, no dependencies
 - Takes input → produces output
 - Easy to reason about and test
+- **Does NOT validate request inputs** - controller already did that
 
 ### Example Flow
 
@@ -95,10 +97,16 @@ Request → Controller → Service → Domain Function
 - Domain functions: Clear, descriptive names (e.g., `validateUser`, `calculateTotal`)
 - Repositories: `*Repository`
 
+### Validation Strategy
+- **Controller validates request inputs** using `@Valid` and Bean Validation annotations
+- **Domain validates business rules** (e.g., "user cannot have more than 5 active sessions")
+- Don't duplicate validation - if it's a simple format check, controller handles it
+- Domain only validates things that require business logic or data
+
 ### Package Organization
 - Keep related code together within bounded contexts
-- Shared utilities can live in a `common/` or `shared/` package
-- DTOs can live in context packages or a shared `dto/` package
+- Shared utilities can live in a `common/` package
+- DTOs live within their bounded context (e.g., `user/dto/`)
 
 ---
 

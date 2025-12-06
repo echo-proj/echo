@@ -1,4 +1,4 @@
-package com.echoproject.echo.user.repository;
+package com.echoproject.echo.user.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
