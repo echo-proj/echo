@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
-import styles from '@/styles/pages/Landing.module.scss';
+import styles from '@/pages/Landing.module.scss';
 
 export default function Landing() {
   const router = useRouter();
