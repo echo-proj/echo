@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useLogin } from '@/hooks/useAuth';
-import { getErrorMessage } from '@/lib/utils/errorHandler';
+import { getErrorMessage, getValidationErrors } from '@/lib/utils/errorHandler';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
 import styles from './Login.module.scss';
 
@@ -24,6 +25,21 @@ export default function Login() {
     loginMutation.mutate(data);
   };
 
+  // Set server-side validation errors on form fields
+  useEffect(() => {
+    if (loginMutation.isError) {
+      const validationErrors = getValidationErrors(loginMutation.error);
+      if (validationErrors) {
+        Object.entries(validationErrors).forEach(([field, message]) => {
+          form.setError(field as keyof LoginFormData, {
+            type: 'server',
+            message,
+          });
+        });
+      }
+    }
+  }, [loginMutation.isError, loginMutation.error, form]);
+
   return (
     <div className={styles.loginPage}>
       <div className={styles.loginCard}>
@@ -34,7 +50,7 @@ export default function Login() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className={styles.form}>
-            {loginMutation.isError && (
+            {loginMutation.isError && !getValidationErrors(loginMutation.error) && (
               <div className={styles.error}>
                 {getErrorMessage(loginMutation.error, 'Invalid username or password. Please try again.')}
               </div>
