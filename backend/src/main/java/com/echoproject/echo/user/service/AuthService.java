@@ -36,6 +36,7 @@ public class AuthService {
 
     UserProfile profile = new UserProfile();
     profile.setUser(user);
+    profile.setFullName(request.getFullName());
     userProfileRepository.save(profile);
 
     String token = jwtUtil.generateToken(user.getUsername());
