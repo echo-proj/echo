@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useRegister } from '@/hooks/useAuth';
-import { getErrorMessage } from '@/lib/utils/errorHandler';
+import { getErrorMessage, getValidationErrors } from '@/lib/utils/errorHandler';
 import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
 import styles from './Register.module.scss';
 
@@ -25,6 +26,20 @@ export default function Register() {
     registerMutation.mutate(data);
   };
 
+  useEffect(() => {
+    if (registerMutation.isError) {
+      const validationErrors = getValidationErrors(registerMutation.error);
+      if (validationErrors) {
+        Object.entries(validationErrors).forEach(([field, message]) => {
+          form.setError(field as keyof RegisterFormData, {
+            type: 'server',
+            message,
+          });
+        });
+      }
+    }
+  }, [registerMutation.isError, registerMutation.error, form]);
+
   return (
     <div className={styles.registerPage}>
       <div className={styles.registerCard}>
@@ -35,7 +50,7 @@ export default function Register() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className={styles.form}>
-            {registerMutation.isError && (
+            {registerMutation.isError && !getValidationErrors(registerMutation.error) && (
               <div className={styles.error}>
                 {getErrorMessage(registerMutation.error, 'Failed to create account. Please try again.')}
               </div>
