@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useRegister } from '@/hooks/useAuth';
 import { getErrorMessage, getValidationErrors } from '@/lib/utils/errorHandler';
-import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
 import styles from './Register.module.scss';
+import {RegisterFormData, registerSchema} from "@/pages/register/validations";
 
 export default function Register() {
   const registerMutation = useRegister();

@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useLogin } from '@/hooks/useAuth';
 import { getErrorMessage, getValidationErrors } from '@/lib/utils/errorHandler';
-import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
 import styles from './Login.module.scss';
+import {LoginFormData, loginSchema} from "@/pages/login/validations";
 
 export default function Login() {
   const loginMutation = useLogin();
@@ -25,7 +25,6 @@ export default function Login() {
     loginMutation.mutate(data);
   };
 
-  // Set server-side validation errors on form fields
   useEffect(() => {
     if (loginMutation.isError) {
       const validationErrors = getValidationErrors(loginMutation.error);
