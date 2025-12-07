@@ -27,8 +27,6 @@ export default function Register() {
     registerMutation.mutate(data);
   };
 
-  console.log(registerMutation.error);
-
   const validationErrors = registerMutation.isError ? getValidationErrors(registerMutation.error) : null;
   const generalError = registerMutation.isError && !validationErrors ? getErrorMessage(registerMutation.error) : null;
 
@@ -38,92 +36,92 @@ export default function Register() {
         <div className={styles.header}>
           <h1>Create Account</h1>
           <p>Get started with Echo today</p>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className={styles.form}>
-                    {(validationErrors || generalError) && (
-                        <Alert variant="destructive">
-                            <AlertCircleIcon />
-                            <AlertTitle>Unable to create account.</AlertTitle>
-                            <AlertDescription>
-                                {validationErrors && (
-                                    <ul className="list-inside list-disc text-sm">
-                                        {Object.entries(validationErrors).map(([field, message]) => (
-                                            <li key={field}>{message}</li>
-                                        ))}
-                                    </ul>
-                                )}
-                                {generalError && <p>{generalError}</p>}
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
-                    <FormField
-                        control={form.control}
-                        name="fullName"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Full Name</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="John Doe"
-                                        disabled={registerMutation.isPending}
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="Choose a username"
-                                        disabled={registerMutation.isPending}
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        type="password"
-                                        placeholder="Create a strong password"
-                                        disabled={registerMutation.isPending}
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <Button
-                        type="submit"
-                        size="lg"
-                        className={styles.submitBtn}
-                        disabled={registerMutation.isPending}
-                    >
-                        {registerMutation.isPending ? 'Creating account...' : 'Create Account'}
-                    </Button>
-                </form>
-            </Form>
-
         </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className={styles.form}>
+            {(validationErrors || generalError) && (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertTitle>Unable to create account.</AlertTitle>
+                <AlertDescription>
+                  {validationErrors && (
+                    <ul className="list-inside list-disc text-sm">
+                      {Object.entries(validationErrors).map(([field, message]) => (
+                        <li key={field}>{message}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {generalError && <p>{generalError}</p>}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="John Doe"
+                      disabled={registerMutation.isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Choose a username"
+                      disabled={registerMutation.isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Create a strong password"
+                      disabled={registerMutation.isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              size="lg"
+              className={styles.submitBtn}
+              disabled={registerMutation.isPending}
+            >
+              {registerMutation.isPending ? 'Creating account...' : 'Create Account'}
+            </Button>
+          </form>
+        </Form>
 
         <div className={styles.footer}>
           <p>
