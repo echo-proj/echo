@@ -1,6 +1,5 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCreateDocument } from '@/hooks/useDocuments';
-import { getValidationErrors } from '@/lib/utils/errorHandler';
+import { getErrorMessage, getValidationErrors } from '@/lib/utils';
 import {CreateDocumentFormData, createDocumentSchema} from "@/pages/documents/validations";
 
 interface CreateDocumentDialogProps {
@@ -39,26 +39,8 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
     });
   };
 
-  useEffect(() => {
-    if (createMutation.isError) {
-      const validationErrors = getValidationErrors(createMutation.error);
-      if (validationErrors) {
-        Object.entries(validationErrors).forEach(([field, message]) => {
-          form.setError(field as keyof CreateDocumentFormData, {
-            type: 'server',
-            message,
-          });
-        });
-      }
-    }
-  }, [createMutation.isError, createMutation.error, form]);
-
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-      createMutation.reset();
-    }
-  }, [open, form, createMutation]);
+  const validationErrors = createMutation.isError ? getValidationErrors(createMutation.error) : null;
+  const generalError = createMutation.isError && !validationErrors ? getErrorMessage(createMutation.error) : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,6 +54,21 @@ export function CreateDocumentDialog({ open, onOpenChange }: CreateDocumentDialo
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {(validationErrors || generalError) && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {validationErrors && (
+                    <ul className="list-inside list-disc text-sm">
+                      {Object.entries(validationErrors).map(([field, message]) => (
+                        <li key={field}>{message}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {generalError && <p>{generalError}</p>}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <FormField
               control={form.control}
               name="title"

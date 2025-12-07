@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLogin } from '@/hooks/useAuth';
-import { getErrorMessage, getValidationErrors } from '@/lib/utils/errorHandler';
+import { getErrorMessage, getValidationErrors } from '@/lib/utils';
 import styles from './Login.module.scss';
 import {LoginFormData, loginSchema} from "@/pages/login/validations";
 
@@ -25,19 +25,8 @@ export default function Login() {
     loginMutation.mutate(data);
   };
 
-  useEffect(() => {
-    if (loginMutation.isError) {
-      const validationErrors = getValidationErrors(loginMutation.error);
-      if (validationErrors) {
-        Object.entries(validationErrors).forEach(([field, message]) => {
-          form.setError(field as keyof LoginFormData, {
-            type: 'server',
-            message,
-          });
-        });
-      }
-    }
-  }, [loginMutation.isError, loginMutation.error, form]);
+  const validationErrors = loginMutation.isError ? getValidationErrors(loginMutation.error) : null;
+  const generalError = loginMutation.isError && !validationErrors ? getErrorMessage(loginMutation.error) : null;
 
   return (
     <div className={styles.loginPage}>
@@ -49,10 +38,19 @@ export default function Login() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className={styles.form}>
-            {loginMutation.isError && !getValidationErrors(loginMutation.error) && (
-              <div className={styles.error}>
-                {getErrorMessage(loginMutation.error, 'Invalid username or password. Please try again.')}
-              </div>
+            {(validationErrors || generalError) && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {validationErrors && (
+                    <ul className="list-inside list-disc text-sm">
+                      {Object.entries(validationErrors).map(([field, message]) => (
+                        <li key={field}>{message}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {generalError && <p>{generalError}</p>}
+                </AlertDescription>
+              </Alert>
             )}
 
             <FormField

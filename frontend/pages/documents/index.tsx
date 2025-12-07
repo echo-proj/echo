@@ -1,16 +1,22 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateDocumentDialog } from '@/pages/documents/components/CreateDocumentDialog';
+import { DocumentEditorDialog } from '@/pages/documents/components/DocumentEditorDialog';
 import { useDocuments } from '@/hooks/useDocuments';
 import styles from './Documents.module.scss';
 import {formatDate} from "@/lib/utils";
 
 export default function Documents() {
-  const router = useRouter();
   const { data: documents, isLoading, isError } = useDocuments();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+
+  const handleEditorOpenChange = (open: boolean) => {
+    if (!open) {
+      setSelectedDocumentId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -67,7 +73,7 @@ export default function Documents() {
               <Card
                 key={doc.id}
                 className={styles.documentCard}
-                onClick={() => router.push(`/documents/${doc.id}`)}
+                onClick={() => setSelectedDocumentId(doc.id)}
               >
                 <CardHeader>
                   <CardTitle className={styles.documentTitle}>{doc.title}</CardTitle>
@@ -95,6 +101,14 @@ export default function Documents() {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
       />
+
+      {selectedDocumentId && (
+        <DocumentEditorDialog
+          documentId={selectedDocumentId}
+          open={true}
+          onOpenChange={handleEditorOpenChange}
+        />
+      )}
     </div>
   );
 }
