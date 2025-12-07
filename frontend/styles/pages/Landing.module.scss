@@ -1,0 +1,113 @@
+@import '../variables.scss';
+
+.landing {
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 1000px;
+    height: 1000px;
+    background: radial-gradient(circle, rgba($white, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba($white, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+  }
+}
+
+.hero {
+  width: 100%;
+  z-index: 1;
+}
+
+.heroContent {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  color: $white;
+}
+
+.title {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: $font-weight-bold;
+  margin-bottom: $spacing-lg;
+  line-height: 1.2;
+  color: $white;
+}
+
+.gradient {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.subtitle {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  margin-bottom: $spacing-2xl;
+  line-height: 1.6;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0.95;
+}
+
+.cta {
+  display: flex;
+  gap: $spacing-lg;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: $spacing-3xl;
+}
+
+.features {
+  display: flex;
+  gap: $spacing-2xl;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: $spacing-xl;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  background: rgba($white, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 999px;
+  border: 1px solid rgba($white, 0.2);
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:hover {
+    background: rgba($white, 0.15);
+    transform: translateY(-2px);
+  }
+}
+
+.featureIcon {
+  font-size: 1.5rem;
+}
