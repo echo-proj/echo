@@ -130,6 +130,21 @@ public class DocumentService {
     collaboratorRepository.deleteByDocumentIdAndUserId(documentId, collaboratorUserId);
   }
 
+  @Transactional(readOnly = true)
+  public boolean validateDocumentAccess(UUID userId, UUID documentId) {
+    Document document =
+        documentRepository
+            .findById(documentId)
+            .orElseThrow(() -> new NotFoundException("Document not found"));
+
+    Set<UUID> collaboratorIds =
+        collaboratorRepository.findByDocumentId(documentId).stream()
+            .map(dc -> dc.getUser().getId())
+            .collect(Collectors.toSet());
+
+    return DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds);
+  }
+
   private DocumentResponse toResponse(Document document) {
     return new DocumentResponse(
         document.getId(),
