@@ -1,0 +1,75 @@
+@import '../../styles/variables.scss';
+
+.loginPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: $spacing-lg;
+}
+
+.loginCard {
+  background: white;
+  padding: $spacing-3xl;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 640px) {
+    padding: $spacing-xl;
+  }
+}
+
+.header {
+  margin-bottom: $spacing-2xl;
+
+  h1 {
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    margin-bottom: $spacing-sm;
+    color: #1f2937;
+  }
+
+  p {
+    color: #6b7280;
+    font-size: $font-size-base;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.error {
+  padding: $spacing-md;
+  background-color: #fee;
+  border: 2px solid #ef4444;
+  color: #991b1b;
+  font-size: $font-size-sm;
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: $spacing-md;
+}
+
+.footer {
+  margin-top: $spacing-xl;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: #6b7280;
+
+  .link {
+    color: #6366f1;
+    font-weight: $font-weight-medium;
+    transition: color $transition-base;
+
+    &:hover {
+      color: #4f46e5;
+      text-decoration: underline;
+    }
+  }
+}
