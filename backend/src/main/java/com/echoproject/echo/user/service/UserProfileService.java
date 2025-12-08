@@ -3,10 +3,13 @@ package com.echoproject.echo.user.service;
 import com.echoproject.echo.common.exception.NotFoundException;
 import com.echoproject.echo.user.dto.UserProfileRequest;
 import com.echoproject.echo.user.dto.UserProfileResponse;
+import com.echoproject.echo.user.dto.UserSearchResponse;
 import com.echoproject.echo.user.models.User;
 import com.echoproject.echo.user.models.UserProfile;
 import com.echoproject.echo.user.repository.UserProfileRepository;
 import com.echoproject.echo.user.repository.UserRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -59,5 +62,26 @@ public class UserProfileService {
         profile.getFullName(),
         profile.getPhoneNumber(),
         profile.getProfilePicture());
+  }
+
+  public List<UserSearchResponse> searchUsers(String query) {
+    if (query == null || query.trim().isEmpty()) {
+      return List.of();
+    }
+
+    List<User> users = userRepository.searchByUsername(query.trim());
+
+    return users.stream()
+        .map(
+            user -> {
+              UserProfile profile = user.getProfile();
+              return new UserSearchResponse(
+                  user.getId(),
+                  user.getUsername(),
+                  profile != null ? profile.getFullName() : null,
+                  profile != null ? profile.getProfilePicture() : null);
+            })
+        .limit(10)
+        .collect(Collectors.toList());
   }
 }

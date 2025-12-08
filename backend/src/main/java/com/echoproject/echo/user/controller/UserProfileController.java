@@ -2,7 +2,9 @@ package com.echoproject.echo.user.controller;
 
 import com.echoproject.echo.user.dto.UserProfileRequest;
 import com.echoproject.echo.user.dto.UserProfileResponse;
+import com.echoproject.echo.user.dto.UserSearchResponse;
 import com.echoproject.echo.user.service.UserProfileService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,5 +31,12 @@ public class UserProfileController {
     UserProfileResponse response =
         userProfileService.updateProfile(userDetails.getUsername(), request);
     return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/search")
+  public ResponseEntity<List<UserSearchResponse>> searchUsers(
+      @RequestParam(required = false) String query) {
+    List<UserSearchResponse> users = userProfileService.searchUsers(query);
+    return ResponseEntity.ok(users);
   }
 }
