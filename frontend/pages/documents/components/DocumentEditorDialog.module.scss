@@ -1,30 +1,160 @@
 .dialogContent {
-  max-width: 95vw !important;
-  width: 1200px !important;
+  max-width: 97vw !important;
+  width: 1500px !important;
   max-height: 90vh !important;
   padding: 0 !important;
   display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.leftPanel {
+  flex: 1;
+  display: flex;
   flex-direction: column;
+  min-width: 0;
+  background-color: #ffffff;
+}
+
+.rightPanel {
+  width: 350px;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.rightPanelHeader {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 65px;
+}
+
+.rightPanelTitle {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.rightPanelBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.headerWrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
 }
 
 .title {
   font-size: 1.5rem;
   font-weight: 600;
-  margin: 0;
-  padding: 1.5rem 1.5rem 0.5rem;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.subtitle {
+.titleIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.collaboratorButton {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.documentInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.infoIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #6b7280;
+}
+
+.infoLabel {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.infoValue {
+  color: #111827;
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.875rem;
   color: #6b7280;
-  margin: 0;
-  padding: 0 1.5rem 1rem;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .editorWrapper {
   flex: 1;
   overflow: hidden;
   padding: 0 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheetContent {
+  display: flex;
+  flex-direction: column;
+  width: 400px !important;
+  max-width: 90vw !important;
+}
+
+.sheetBody {
+  flex: 1;
+  overflow: hidden;
+  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
 }
@@ -55,17 +185,42 @@
     border-radius: 0 !important;
   }
 
-  .title {
-    font-size: 1.25rem;
-    padding: 1rem 1rem 0.5rem;
+  .headerWrapper {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
   }
 
-  .subtitle {
-    padding: 0 1rem 0.75rem;
+  .title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .titleIcon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .collaboratorButton {
+    margin-top: 0.75rem;
+    width: 100%;
+  }
+
+  .documentInfo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .infoItem {
     font-size: 0.8rem;
   }
 
   .editorWrapper {
     padding: 0 1rem 1rem;
+  }
+
+  .sheetContent {
+    width: 100vw !important;
+    max-width: 100vw !important;
   }
 }

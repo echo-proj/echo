@@ -1,5 +1,5 @@
 import { axiosInstance } from '../axios';
-import {CreateDocumentRequest, Document} from "@/pages/documents/type";
+import {AddCollaboratorRequest, CreateDocumentRequest, Document} from "@/pages/documents/type";
 
 export const documentsApi = {
   getAll: async (): Promise<Document[]> => {
@@ -19,5 +19,13 @@ export const documentsApi = {
 
   delete: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/api/documents/${id}`);
+  },
+
+  addCollaborator: async (documentId: string, data: AddCollaboratorRequest): Promise<void> => {
+    await axiosInstance.post(`/api/documents/${documentId}/collaborators`, data);
+  },
+
+  removeCollaborator: async (documentId: string, userId: string): Promise<void> => {
+    await axiosInstance.delete(`/api/documents/${documentId}/collaborators/${userId}`);
   },
 };
