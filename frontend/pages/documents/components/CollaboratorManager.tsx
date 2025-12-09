@@ -4,11 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useSearchUsers, useAddCollaborator, useRemoveCollaborator } from '@/hooks/useUsers';
 import { Collaborator, UserSearchResult } from '@/pages/documents/type';
 import { UserPlus, Search, Loader2, UserMinus, Users, AlertCircle } from 'lucide-react';
 import { getErrorMessage } from "@/lib/utils";
-import Image from "next/image";
 
 interface CollaboratorManagerProps {
   documentId: string;
@@ -16,16 +16,13 @@ interface CollaboratorManagerProps {
   isLoading?: boolean;
 }
 
-const UserAvatar = ({ user, size = 40 }: { user: { username: string; profilePicture: string | null }, size?: number }) => (
-  <div className="rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-400" style={{ width: size, height: size }}>
-    {user.profilePicture ? (
-      <Image src={user.profilePicture} alt={user.username} width={size} height={size} className="object-cover" />
-    ) : (
-      <div className="w-full h-full flex items-center justify-center text-white font-semibold">
-        {user.username.charAt(0).toUpperCase()}
-      </div>
-    )}
-  </div>
+const UserAvatar = ({ user }: { user: { username: string; profilePicture: string | null } }) => (
+  <Avatar>
+    <AvatarImage src={user.profilePicture || undefined} alt={user.username} />
+    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-400 text-white font-semibold">
+      {user.username.charAt(0).toUpperCase()}
+    </AvatarFallback>
+  </Avatar>
 );
 
 const UserItem = ({
