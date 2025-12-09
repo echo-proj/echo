@@ -1,23 +1,71 @@
+import { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Collaboration from '@tiptap/extension-collaboration';
+import * as Y from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
 import styles from './TiptapEditor.module.scss';
 
 interface TiptapEditorProps {
   documentId: string;
 }
 
+const COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
+
 export function TiptapEditor({ documentId }: TiptapEditorProps) {
+  const [provider, setProvider] = useState<WebsocketProvider | null>(null);
+  const [ydoc] = useState(() => new Y.Doc());
+
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+
+    if (!token) {
+      console.error('No authentication token found');
+      return;
+    }
+
+    const wsProvider = new WebsocketProvider(
+      COLLABORATION_WS_URL,
+      documentId,
+      ydoc,
+      {
+        params: {
+          token,
+          documentId,
+        },
+      }
+    );
+
+    wsProvider.on('status', (event: { status: string }) => {
+      console.log('WebSocket status:', event.status);
+    });
+
+    wsProvider.on('sync', (isSynced: boolean) => {
+      console.log('Document synced:', isSynced);
+    });
+
+    setProvider(wsProvider);
+
+    return () => {
+      wsProvider?.destroy();
+    };
+  }, [documentId, ydoc]);
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        history: false,
+      }),
+      Collaboration.configure({
+        document: ydoc,
+      }),
     ],
-    content: '<p>Start typing your document here...</p>',
     editorProps: {
       attributes: {
         class: styles.editor,
       },
     },
-  });
+  }, [provider]);
 
   if (!editor) {
     return <div className={styles.loading}>Loading editor...</div>;
