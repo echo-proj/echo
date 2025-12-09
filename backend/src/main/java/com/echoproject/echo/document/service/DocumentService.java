@@ -4,6 +4,7 @@ import com.echoproject.echo.common.exception.BadRequestException;
 import com.echoproject.echo.common.exception.NotFoundException;
 import com.echoproject.echo.document.domain.DocumentAccessControl;
 import com.echoproject.echo.document.dto.AddCollaboratorRequest;
+import com.echoproject.echo.document.dto.CollaboratorResponse;
 import com.echoproject.echo.document.dto.CreateDocumentRequest;
 import com.echoproject.echo.document.dto.DocumentResponse;
 import com.echoproject.echo.document.models.Document;
@@ -12,6 +13,7 @@ import com.echoproject.echo.document.repository.DocumentCollaboratorRepository;
 import com.echoproject.echo.document.repository.DocumentRepository;
 import com.echoproject.echo.user.models.User;
 import com.echoproject.echo.user.repository.UserRepository;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -35,13 +37,13 @@ public class DocumentService {
     Document document = new Document(request.getTitle(), owner);
     documentRepository.save(document);
 
-    return toResponse(document);
+    return toResponseWithoutCollaborators(document);
   }
 
   @Transactional(readOnly = true)
   public List<DocumentResponse> getUserDocuments(UUID userId) {
     List<Document> documents = documentRepository.findAllAccessibleByUser(userId);
-    return documents.stream().map(this::toResponse).toList();
+    return documents.stream().map(this::toResponseWithoutCollaborators).toList();
   }
 
   @Transactional(readOnly = true)
@@ -51,8 +53,11 @@ public class DocumentService {
             .findById(documentId)
             .orElseThrow(() -> new NotFoundException("Document not found"));
 
+    List<DocumentCollaborator> documentCollaborators =
+        collaboratorRepository.findByDocumentId(documentId);
+
     Set<UUID> collaboratorIds =
-        collaboratorRepository.findByDocumentId(documentId).stream()
+        documentCollaborators.stream()
             .map(dc -> dc.getUser().getId())
             .collect(Collectors.toSet());
 
@@ -60,7 +65,7 @@ public class DocumentService {
       throw new BadRequestException("Access denied");
     }
 
-    return toResponse(document);
+    return toResponseWithCollaborators(document, documentCollaborators);
   }
 
   @Transactional
@@ -145,11 +150,36 @@ public class DocumentService {
     return DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds);
   }
 
-  private DocumentResponse toResponse(Document document) {
+  private DocumentResponse toResponseWithoutCollaborators(Document document) {
     return new DocumentResponse(
         document.getId(),
         document.getTitle(),
         document.getOwner().getUsername(),
+        Collections.emptyList(),
+        document.getCreatedAt(),
+        document.getUpdatedAt());
+  }
+
+  private DocumentResponse toResponseWithCollaborators(
+      Document document, List<DocumentCollaborator> documentCollaborators) {
+    List<CollaboratorResponse> collaborators =
+        documentCollaborators.stream()
+            .map(
+                dc -> {
+                  User user = dc.getUser();
+                  return new CollaboratorResponse(
+                      user.getId(),
+                      user.getUsername(),
+                      user.getProfile().getFullName(),
+                      user.getProfile().getProfilePicture());
+                })
+            .toList();
+
+    return new DocumentResponse(
+        document.getId(),
+        document.getTitle(),
+        document.getOwner().getUsername(),
+        collaborators,
         document.getCreatedAt(),
         document.getUpdatedAt());
   }

@@ -66,7 +66,11 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
             <span className={styles.rightPanelTitle}>Collaborators</span>
           </div>
           <div className={styles.rightPanelBody}>
-            <CollaboratorManager documentId={documentId} />
+            <CollaboratorManager
+              documentId={documentId}
+              collaborators={document?.collaborators || []}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </DialogContent>
