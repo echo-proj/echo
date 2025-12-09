@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useDebounce } from 'use-debounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useSearchUsers, useAddCollaborator } from '@/hooks/useUsers';
@@ -14,18 +15,10 @@ interface CollaboratorManagerProps {
 
 export function CollaboratorManager({ documentId }: CollaboratorManagerProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [debouncedQuery] = useDebounce(searchQuery, 300);
 
   const { data: searchResults = [], isLoading: isSearching } = useSearchUsers(debouncedQuery);
   const addCollaboratorMutation = useAddCollaborator();
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
 
   const handleAddCollaborator = (user: UserSearchResult) => {
     addCollaboratorMutation.mutate(
@@ -36,7 +29,6 @@ export function CollaboratorManager({ documentId }: CollaboratorManagerProps) {
       {
         onSuccess: () => {
           setSearchQuery('');
-          setDebouncedQuery('');
         },
       }
     );
