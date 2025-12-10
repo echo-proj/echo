@@ -2,7 +2,10 @@ package com.echoproject.echo.document.controller;
 
 import com.echoproject.echo.document.dto.AddCollaboratorRequest;
 import com.echoproject.echo.document.dto.CreateDocumentRequest;
+import com.echoproject.echo.document.dto.DocumentContentResponse;
 import com.echoproject.echo.document.dto.DocumentResponse;
+import com.echoproject.echo.document.dto.ValidateDocumentAccessRequest;
+import com.echoproject.echo.document.dto.ValidateDocumentAccessResponse;
 import com.echoproject.echo.document.service.DocumentService;
 import com.echoproject.echo.security.service.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -64,6 +67,37 @@ public class DocumentController {
       @PathVariable UUID id,
       @PathVariable UUID userId) {
     documentService.removeCollaborator(userDetails.getId(), id, userId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/{id}/content")
+  public ResponseEntity<byte[]> getDocumentContent(
+      @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable UUID id) {
+    DocumentContentResponse content = documentService.getDocumentContent(userDetails.getId(), id);
+    return ResponseEntity.ok()
+        .header("Content-Type", "application/octet-stream")
+        .body(content.getState());
+  }
+
+  @PostMapping("/validate-access")
+  public ResponseEntity<ValidateDocumentAccessResponse> validateDocumentAccess(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @Valid @RequestBody ValidateDocumentAccessRequest request) {
+
+    boolean hasAccess =
+        documentService.validateDocumentAccess(userDetails.getId(), request.getDocumentId());
+
+    return ResponseEntity.ok(
+        new ValidateDocumentAccessResponse(
+            hasAccess, userDetails.getId(), userDetails.getUsername()));
+  }
+
+  @PostMapping("/{id}/content")
+  public ResponseEntity<Void> saveDocumentContent(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PathVariable UUID id,
+      @RequestBody byte[] state) {
+    documentService.saveDocumentContent(userDetails.getId(), id, state);
     return ResponseEntity.noContent().build();
   }
 }

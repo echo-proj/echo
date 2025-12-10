@@ -6,10 +6,13 @@ import com.echoproject.echo.document.domain.DocumentAccessControl;
 import com.echoproject.echo.document.dto.AddCollaboratorRequest;
 import com.echoproject.echo.document.dto.CollaboratorResponse;
 import com.echoproject.echo.document.dto.CreateDocumentRequest;
+import com.echoproject.echo.document.dto.DocumentContentResponse;
 import com.echoproject.echo.document.dto.DocumentResponse;
 import com.echoproject.echo.document.models.Document;
 import com.echoproject.echo.document.models.DocumentCollaborator;
+import com.echoproject.echo.document.models.DocumentContent;
 import com.echoproject.echo.document.repository.DocumentCollaboratorRepository;
+import com.echoproject.echo.document.repository.DocumentContentRepository;
 import com.echoproject.echo.document.repository.DocumentRepository;
 import com.echoproject.echo.user.models.User;
 import com.echoproject.echo.user.repository.UserRepository;
@@ -28,6 +31,7 @@ public class DocumentService {
 
   private final DocumentRepository documentRepository;
   private final DocumentCollaboratorRepository collaboratorRepository;
+  private final DocumentContentRepository contentRepository;
   private final UserRepository userRepository;
 
   @Transactional
@@ -57,9 +61,7 @@ public class DocumentService {
         collaboratorRepository.findByDocumentId(documentId);
 
     Set<UUID> collaboratorIds =
-        documentCollaborators.stream()
-            .map(dc -> dc.getUser().getId())
-            .collect(Collectors.toSet());
+        documentCollaborators.stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
 
     if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
       throw new BadRequestException("Access denied");
@@ -182,5 +184,54 @@ public class DocumentService {
         collaborators,
         document.getCreatedAt(),
         document.getUpdatedAt());
+  }
+
+  @Transactional
+  public void saveDocumentContent(UUID userId, UUID documentId, byte[] state) {
+    Document document =
+        documentRepository
+            .findById(documentId)
+            .orElseThrow(() -> new NotFoundException("Document not found"));
+
+    Set<UUID> collaboratorIds =
+        collaboratorRepository.findByDocumentId(documentId).stream()
+            .map(dc -> dc.getUser().getId())
+            .collect(Collectors.toSet());
+
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+      throw new BadRequestException("Access denied");
+    }
+
+    DocumentContent content =
+        contentRepository.findById(documentId).orElseGet(() -> new DocumentContent(document));
+
+    content.setState(state);
+    contentRepository.save(content);
+  }
+
+  @Transactional(readOnly = true)
+  public DocumentContentResponse getDocumentContent(UUID userId, UUID documentId) {
+    Document document =
+        documentRepository
+            .findById(documentId)
+            .orElseThrow(() -> new NotFoundException("Document not found"));
+
+    Set<UUID> collaboratorIds =
+        collaboratorRepository.findByDocumentId(documentId).stream()
+            .map(dc -> dc.getUser().getId())
+            .collect(Collectors.toSet());
+
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+      throw new BadRequestException("Access denied");
+    }
+
+    DocumentContent content = contentRepository.findById(documentId).orElse(null);
+
+    if (content == null) {
+      return new DocumentContentResponse(documentId, new byte[0], null);
+    }
+
+    return new DocumentContentResponse(
+        content.getDocumentId(), content.getState(), content.getUpdatedAt());
   }
 }
