@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.echoproject.echo.document.dto.AddCollaboratorRequest;
 import com.echoproject.echo.document.dto.CreateDocumentRequest;
+import com.echoproject.echo.document.dto.DocumentContentResponse;
 import com.echoproject.echo.document.dto.DocumentResponse;
 import com.echoproject.echo.document.models.Document;
 import com.echoproject.echo.document.models.DocumentCollaborator;
+import com.echoproject.echo.document.models.DocumentContent;
 import com.echoproject.echo.document.repository.DocumentCollaboratorRepository;
+import com.echoproject.echo.document.repository.DocumentContentRepository;
 import com.echoproject.echo.document.repository.DocumentRepository;
 import com.echoproject.echo.document.service.DocumentService;
 import com.echoproject.echo.user.models.User;
@@ -30,6 +33,8 @@ class DocumentServiceIntegrationTest {
 
   @Autowired private DocumentCollaboratorRepository collaboratorRepository;
 
+  @Autowired private DocumentContentRepository contentRepository;
+
   @Autowired private UserRepository userRepository;
 
   @Autowired private PasswordEncoder passwordEncoder;
@@ -39,6 +44,7 @@ class DocumentServiceIntegrationTest {
 
   @BeforeEach
   void setUp() {
+    contentRepository.deleteAll();
     collaboratorRepository.deleteAll();
     documentRepository.deleteAll();
     userRepository.deleteAll();
@@ -134,5 +140,38 @@ class DocumentServiceIntegrationTest {
 
     // Then
     assertThat(collaboratorRepository.existsByDocumentIdAndUserId(doc.getId(), collaborator.getId())).isFalse();
+  }
+
+  @Test
+  void saveDocumentContent_shouldSaveContentSuccessfully() {
+    // Given
+    Document doc = new Document("Test Doc", owner);
+    documentRepository.save(doc);
+    byte[] testState = "test content state".getBytes();
+
+    // When
+    documentService.saveDocumentContent(owner.getId(), doc.getId(), testState);
+
+    // Then
+    DocumentContent savedContent = contentRepository.findById(doc.getId()).orElseThrow();
+    assertThat(savedContent.getState()).isEqualTo(testState);
+    assertThat(savedContent.getDocumentId()).isEqualTo(doc.getId());
+  }
+
+  @Test
+  void getDocumentContent_shouldReturnContentSuccessfully() {
+    // Given
+    Document doc = new Document("Test Doc", owner);
+    documentRepository.save(doc);
+    byte[] testState = "test content state".getBytes();
+    documentService.saveDocumentContent(owner.getId(), doc.getId(), testState);
+
+    // When
+    DocumentContentResponse response = documentService.getDocumentContent(owner.getId(), doc.getId());
+
+    // Then
+    assertThat(response.getDocumentId()).isEqualTo(doc.getId());
+    assertThat(response.getState()).isEqualTo(testState);
+    assertThat(response.getUpdatedAt()).isNotNull();
   }
 }

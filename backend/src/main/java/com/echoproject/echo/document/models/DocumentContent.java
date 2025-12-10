@@ -39,6 +39,5 @@ public class DocumentContent {
 
   public DocumentContent(Document document) {
     this.document = document;
-    this.documentId = document.getId();
   }
 }
