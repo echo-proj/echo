@@ -17,16 +17,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class DocumentContent {
 
   @Id
-  @Column(name = "document_id")
-  private UUID documentId;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @OneToOne
-  @MapsId
-  @JoinColumn(name = "document_id")
+  @JoinColumn(name = "document_id", unique = true, nullable = false)
   private Document document;
 
-  @Lob
-  @Column(name = "state", columnDefinition = "BYTEA")
+  @Column(name = "state")
   private byte[] state;
 
   @UpdateTimestamp
