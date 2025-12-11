@@ -203,7 +203,7 @@ public class DocumentService {
     }
 
     DocumentContent content =
-        contentRepository.findById(documentId).orElseGet(() -> new DocumentContent(document));
+        contentRepository.findByDocumentId(documentId).orElseGet(() -> new DocumentContent(document));
 
     content.setState(state);
     contentRepository.save(content);
@@ -225,13 +225,13 @@ public class DocumentService {
       throw new BadRequestException("Access denied");
     }
 
-    DocumentContent content = contentRepository.findById(documentId).orElse(null);
+    DocumentContent content = contentRepository.findByDocumentId(documentId).orElse(null);
 
     if (content == null) {
       return new DocumentContentResponse(documentId, new byte[0], null);
     }
 
     return new DocumentContentResponse(
-        content.getDocumentId(), content.getState(), content.getUpdatedAt());
+        documentId, content.getState(), content.getUpdatedAt());
   }
 }
