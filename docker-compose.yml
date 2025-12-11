@@ -31,6 +31,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: secret
       JWT_SECRET: dev-app-secret
       JWT_EXPIRATION: 86400000
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_JPA_FORMAT_SQL: false
     ports:
       - "8080:8080"
     depends_on:
