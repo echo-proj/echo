@@ -142,7 +142,7 @@ class DocumentVersionServiceIntegrationTest {
     versionService.restoreVersion(owner.getId(), doc.getId(), version.getId());
 
     // Then
-    DocumentContent restoredContent = contentRepository.findById(doc.getId()).orElseThrow();
+    DocumentContent restoredContent = contentRepository.findByDocumentId(doc.getId()).orElseThrow();
     assertThat(restoredContent.getState()).isEqualTo(originalState);
   }
 
