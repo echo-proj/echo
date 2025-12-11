@@ -153,9 +153,9 @@ class DocumentServiceIntegrationTest {
     documentService.saveDocumentContent(owner.getId(), doc.getId(), testState);
 
     // Then
-    DocumentContent savedContent = contentRepository.findById(doc.getId()).orElseThrow();
+    DocumentContent savedContent = contentRepository.findByDocumentId(doc.getId()).orElseThrow();
     assertThat(savedContent.getState()).isEqualTo(testState);
-    assertThat(savedContent.getDocumentId()).isEqualTo(doc.getId());
+    assertThat(savedContent.getDocument().getId()).isEqualTo(doc.getId());
   }
 
   @Test
