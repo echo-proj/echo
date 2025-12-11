@@ -1,10 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TiptapEditor } from '@/pages/documents/components/TiptapEditor';
 import { CollaboratorManager } from '@/pages/documents/components/CollaboratorManager';
+import { VersionHistory } from '@/pages/documents/components/VersionHistory';
 import { useDocument } from '@/hooks/useDocuments';
-import { Loader2, FileText, User, Calendar } from 'lucide-react';
+import { Loader2, FileText, User, Calendar, Users, History } from 'lucide-react';
 import styles from './DocumentEditorDialog.module.scss';
 import { formatDate } from "@/lib/utils";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface DocumentEditorDialogProps {
   documentId: string | null;
@@ -14,6 +17,7 @@ interface DocumentEditorDialogProps {
 
 export function DocumentEditorDialog({ documentId, open, onOpenChange }: DocumentEditorDialogProps) {
   const { data: document, isLoading } = useDocument(documentId || '');
+  const [activeTab, setActiveTab] = useState<'collaborators' | 'versions'>('collaborators');
 
   if (!documentId) return null;
 
@@ -63,14 +67,41 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
 
         <div className={styles.rightPanel}>
           <div className={styles.rightPanelHeader}>
-            <span className={styles.rightPanelTitle}>Collaborators</span>
+            <div className={styles.tabButtons}>
+              <Button
+                variant={activeTab === 'collaborators' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('collaborators')}
+                className={styles.tabButton}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Collaborators
+              </Button>
+              <Button
+                variant={activeTab === 'versions' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('versions')}
+                className={styles.tabButton}
+              >
+                <History className="w-4 h-4 mr-2" />
+                Versions
+              </Button>
+            </div>
           </div>
           <div className={styles.rightPanelBody}>
-            <CollaboratorManager
-              documentId={documentId}
-              collaborators={document?.collaborators || []}
-              isLoading={isLoading}
-            />
+            {activeTab === 'collaborators' ? (
+              <CollaboratorManager
+                documentId={documentId}
+                collaborators={document?.collaborators || []}
+                isLoading={isLoading}
+              />
+            ) : (
+              <VersionHistory
+                documentId={documentId}
+                ownerUsername={document?.ownerUsername || ''}
+                currentUsername={localStorage.getItem('username') || undefined}
+              />
+            )}
           </div>
         </div>
       </DialogContent>

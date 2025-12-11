@@ -28,3 +28,18 @@ export interface UserSearchResult {
     fullName: string | null;
     profilePicture: string | null;
 }
+
+interface DocumentVersion {
+    id: string;
+    documentId: string;
+    versionNumber: number;
+    label: string | null;
+    createdByUsername: string;
+    createdAt: string;
+}
+
+export default DocumentVersion
+
+export interface CreateVersionRequest {
+    label?: string;
+}
