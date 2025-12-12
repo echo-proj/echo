@@ -52,6 +52,11 @@ setPersistence({
       Y.applyUpdate(ydoc, existing);
     }
   },
+  writeState: async () => {
+    // The client already saves to backend via auto-save in TiptapEditor
+    // This is just to satisfy the y-websocket API requirement
+    return Promise.resolve();
+  },
 });
 
 wss.on('connection', async (ws, req) => {

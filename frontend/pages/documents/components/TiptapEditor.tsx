@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { axiosInstance } from '@/lib/axios';
-import { useEditor, EditorContent } from '@tiptap/react';
+import {useEffect, useRef, useState} from 'react';
+import {axiosInstance} from '@/lib/axios';
+import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
 import * as Y from 'yjs';
-import { WebsocketProvider } from 'y-websocket';
+import {WebsocketProvider} from 'y-websocket';
 import styles from './TiptapEditor.module.scss';
 
 interface TiptapEditorProps {
@@ -15,7 +15,8 @@ const COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3
 
 export function TiptapEditor({ documentId }: TiptapEditorProps) {
   const [synced, setSynced] = useState(false);
-  const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const syncedRef = useRef(false);
   const CLIENT_SAVE_DEBOUNCE_MS = 600;
 
   const [{ ydoc, provider }] = useState(() => {
@@ -38,32 +39,45 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
   });
 
   useEffect(() => {
-    provider.on('sync', () => setSynced(true));
+    const handleSync = (isSynced: boolean) => {
+      if (isSynced) {
+        syncedRef.current = true;
+        setSynced(true);
+      }
+    };
+
+    provider.on('sync', handleSync);
 
     const updateHandler = (update: Uint8Array, origin: unknown) => {
-      if (origin === provider && !synced) setSynced(true);
+      if (origin === provider && !syncedRef.current) {
+        syncedRef.current = true;
+        setSynced(true);
+      }
       if (origin !== provider) {
-        if (saveTimer) clearTimeout(saveTimer);
-        const t = setTimeout(async () => {
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(async () => {
           try {
             const state = Y.encodeStateAsUpdate(ydoc);
             await axiosInstance.post(
-              `/api/documents/${documentId}/content`,
-              state,
-              { headers: { 'Content-Type': 'application/octet-stream' }, maxBodyLength: Infinity, maxContentLength: Infinity }
+                `/api/documents/${documentId}/content`,
+                state,
+                {
+                  headers: {'Content-Type': 'application/octet-stream'},
+                  maxBodyLength: Infinity,
+                  maxContentLength: Infinity
+                }
             );
           } catch {
             // ignore transient errors
           }
         }, CLIENT_SAVE_DEBOUNCE_MS);
-        setSaveTimer(t);
       }
     };
     ydoc.on('update', updateHandler);
 
     return () => {
       try {
-        if (saveTimer) clearTimeout(saveTimer);
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
         const state = Y.encodeStateAsUpdate(ydoc);
         void axiosInstance.post(
           `/api/documents/${documentId}/content`,
@@ -74,7 +88,7 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
       ydoc.off('update', updateHandler);
       provider?.destroy();
     };
-  }, [documentId, ydoc, provider, synced, saveTimer]);
+  }, [documentId, ydoc, provider]);
 
   const editor = useEditor({
     extensions: [
