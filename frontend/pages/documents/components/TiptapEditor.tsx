@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { axiosInstance } from '@/lib/axios';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
@@ -13,43 +14,67 @@ interface TiptapEditorProps {
 const COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
 
 export function TiptapEditor({ documentId }: TiptapEditorProps) {
-  const [provider, setProvider] = useState<WebsocketProvider | null>(null);
-  const [ydoc] = useState(() => new Y.Doc());
+  const [synced, setSynced] = useState(false);
+  const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);
+  const CLIENT_SAVE_DEBOUNCE_MS = 600;
 
-  useEffect(() => {
+  const [{ ydoc, provider }] = useState(() => {
+    const doc = new Y.Doc();
     const token = localStorage.getItem('auth_token');
-
-    if (!token) {
-      console.error('No authentication token found');
-      return;
-    }
 
     const wsProvider = new WebsocketProvider(
       COLLABORATION_WS_URL,
       documentId,
-      ydoc,
+      doc,
       {
         params: {
-          token,
+          token: token || '',
           documentId,
         },
       }
     );
 
-    wsProvider.on('status', (event: { status: string }) => {
-      console.log('WebSocket status:', event.status);
-    });
+    return { ydoc: doc, provider: wsProvider };
+  });
 
-    wsProvider.on('sync', (isSynced: boolean) => {
-      console.log('Document synced:', isSynced);
-    });
+  useEffect(() => {
+    provider.on('sync', () => setSynced(true));
 
-    setProvider(wsProvider);
+    const updateHandler = (update: Uint8Array, origin: unknown) => {
+      if (origin === provider && !synced) setSynced(true);
+      if (origin !== provider) {
+        if (saveTimer) clearTimeout(saveTimer);
+        const t = setTimeout(async () => {
+          try {
+            const state = Y.encodeStateAsUpdate(ydoc);
+            await axiosInstance.post(
+              `/api/documents/${documentId}/content`,
+              state,
+              { headers: { 'Content-Type': 'application/octet-stream' }, maxBodyLength: Infinity, maxContentLength: Infinity }
+            );
+          } catch {
+            // ignore transient errors
+          }
+        }, CLIENT_SAVE_DEBOUNCE_MS);
+        setSaveTimer(t);
+      }
+    };
+    ydoc.on('update', updateHandler);
 
     return () => {
-      wsProvider?.destroy();
+      try {
+        if (saveTimer) clearTimeout(saveTimer);
+        const state = Y.encodeStateAsUpdate(ydoc);
+        void axiosInstance.post(
+          `/api/documents/${documentId}/content`,
+          state,
+          { headers: { 'Content-Type': 'application/octet-stream' }, maxBodyLength: Infinity, maxContentLength: Infinity }
+        ).catch(() => {});
+      } catch {}
+      ydoc.off('update', updateHandler);
+      provider?.destroy();
     };
-  }, [documentId, ydoc]);
+  }, [documentId, ydoc, provider, synced, saveTimer]);
 
   const editor = useEditor({
     extensions: [
@@ -58,6 +83,7 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
       }),
       Collaboration.configure({
         document: ydoc,
+        field: 'default',
       }),
     ],
     editorProps: {
@@ -65,10 +91,15 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
         class: styles.editor,
       },
     },
-  }, [provider]);
+    editable: synced,
+  }, [provider, synced]);
 
   if (!editor) {
     return <div className={styles.loading}>Loading editor...</div>;
+  }
+
+  if (!synced) {
+    return <div className={styles.loading}>Syncing document...</div>;
   }
 
   return (

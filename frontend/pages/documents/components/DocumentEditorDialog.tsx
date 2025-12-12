@@ -1,5 +1,4 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { TiptapEditor } from '@/pages/documents/components/TiptapEditor';
 import { CollaboratorManager } from '@/pages/documents/components/CollaboratorManager';
 import { VersionHistory } from '@/pages/documents/components/VersionHistory';
 import { useDocument } from '@/hooks/useDocuments';
@@ -8,6 +7,7 @@ import styles from './DocumentEditorDialog.module.scss';
 import { formatDate } from "@/lib/utils";
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {TiptapEditor} from "@/pages/documents/components/TiptapEditor";
 
 interface DocumentEditorDialogProps {
   documentId: string | null;
@@ -61,7 +61,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
           </DialogHeader>
 
           <div className={styles.editorWrapper}>
-            <TiptapEditor documentId={documentId} />
+            {open && <TiptapEditor documentId={documentId} />}
           </div>
         </div>
 
