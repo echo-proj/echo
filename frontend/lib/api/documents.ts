@@ -21,6 +21,21 @@ export const documentsApi = {
     await axiosInstance.delete(`/api/documents/${id}`);
   },
 
+  getContent: async (documentId: string): Promise<Uint8Array> => {
+    const response = await axiosInstance.get(`/api/documents/${documentId}/content`, {
+      responseType: 'arraybuffer',
+    });
+    return new Uint8Array(response.data);
+  },
+
+  saveContent: async (documentId: string, content: Uint8Array): Promise<void> => {
+    await axiosInstance.post(`/api/documents/${documentId}/content`, content, {
+      headers: { 'Content-Type': 'application/octet-stream' },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+    });
+  },
+
   addCollaborator: async (documentId: string, data: AddCollaboratorRequest): Promise<void> => {
     await axiosInstance.post(`/api/documents/${documentId}/collaborators`, data);
   },

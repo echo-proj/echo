@@ -17,6 +17,22 @@ export const useDocument = (id: string) => {
   });
 };
 
+export const useDocumentContent = (id: string) => {
+  return useQuery({
+    queryKey: ['documents', id, 'content'],
+    queryFn: () => documentsApi.getContent(id),
+    enabled: !!id,
+    staleTime: 0,
+  });
+};
+
+export const useSaveDocumentContent = () => {
+  return useMutation({
+    mutationFn: ({ documentId, content }: { documentId: string; content: Uint8Array }) =>
+      documentsApi.saveContent(documentId, content),
+  });
+};
+
 export const useCreateDocument = () => {
   const queryClient = useQueryClient();
 
@@ -67,6 +83,7 @@ export const useRestoreVersion = () => {
     mutationFn: ({ documentId, versionId }: { documentId: string; versionId: string }) =>
       documentsApi.restoreVersion(documentId, versionId),
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['documents', variables.documentId, 'content'] });
       queryClient.invalidateQueries({ queryKey: ['documents', variables.documentId] });
     },
   });

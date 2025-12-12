@@ -1,11 +1,11 @@
 import {useEffect, useRef, useState} from 'react';
-import {axiosInstance} from '@/lib/axios';
 import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
 import * as Y from 'yjs';
 import {WebsocketProvider} from 'y-websocket';
 import styles from './TiptapEditor.module.scss';
+import {useDocumentContent, useSaveDocumentContent} from '@/hooks/useDocuments';
 
 interface TiptapEditorProps {
   documentId: string;
@@ -16,8 +16,10 @@ const COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3
 export function TiptapEditor({ documentId }: TiptapEditorProps) {
   const [synced, setSynced] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const syncedRef = useRef(false);
   const CLIENT_SAVE_DEBOUNCE_MS = 600;
+
+  const { data: contentData } = useDocumentContent(documentId);
+  const { mutate: saveContentMutate } = useSaveDocumentContent();
 
   const [{ ydoc, provider }] = useState(() => {
     const doc = new Y.Doc();
@@ -39,52 +41,40 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
   });
 
   useEffect(() => {
+    if (contentData && contentData.byteLength > 0 && synced) {
+      Y.applyUpdate(ydoc, contentData);
+    }
+  }, [contentData, synced, ydoc]);
+
+
+  useEffect(() => {
     const handleSync = (isSynced: boolean) => {
-      if (isSynced) {
-        syncedRef.current = true;
-        setSynced(true);
-      }
+      if (isSynced) setSynced(true);
     };
 
     provider.on('sync', handleSync);
 
-    const updateHandler = (update: Uint8Array, origin: unknown) => {
-      if (origin === provider && !syncedRef.current) {
-        syncedRef.current = true;
+    const updateHandler = (_update: Uint8Array, origin: unknown) => {
+      if (origin === provider && !synced) {
         setSynced(true);
       }
+
       if (origin !== provider) {
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(async () => {
-          try {
-            const state = Y.encodeStateAsUpdate(ydoc);
-            await axiosInstance.post(
-                `/api/documents/${documentId}/content`,
-                state,
-                {
-                  headers: {'Content-Type': 'application/octet-stream'},
-                  maxBodyLength: Infinity,
-                  maxContentLength: Infinity
-                }
-            );
-          } catch {
-            // ignore transient errors
-          }
+        saveTimerRef.current = setTimeout(() => {
+          const state = Y.encodeStateAsUpdate(ydoc);
+          saveContentMutate({ documentId, content: state });
         }, CLIENT_SAVE_DEBOUNCE_MS);
       }
     };
+
     ydoc.on('update', updateHandler);
 
     return () => {
-      try {
-        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        const state = Y.encodeStateAsUpdate(ydoc);
-        void axiosInstance.post(
-          `/api/documents/${documentId}/content`,
-          state,
-          { headers: { 'Content-Type': 'application/octet-stream' }, maxBodyLength: Infinity, maxContentLength: Infinity }
-        ).catch(() => {});
-      } catch {}
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      const state = Y.encodeStateAsUpdate(ydoc);
+      saveContentMutate({ documentId, content: state });
+
       ydoc.off('update', updateHandler);
       provider?.destroy();
     };
