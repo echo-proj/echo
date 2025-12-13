@@ -1,3 +1,5 @@
+@import '@/styles/variables';
+
 .editorContainer {
   display: flex;
   flex-direction: column;
@@ -10,14 +12,14 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-bottom: 1px solid $color-border-base;
+  background: $color-bg-secondary;
   border-radius: 8px 8px 0 0;
   flex-wrap: wrap;
 
   button {
     padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid $color-gray-300;
     background: white;
     border-radius: 4px;
     font-size: 0.875rem;
@@ -26,18 +28,18 @@
     transition: all 0.2s;
 
     &:hover {
-      background: #f3f4f6;
-      border-color: #9ca3af;
+      background: $color-bg-hover;
+      border-color: $color-text-tertiary;
     }
 
     &.active {
-      background: #3b82f6;
+      background: $color-primary;
       color: white;
-      border-color: #3b82f6;
+      border-color: $color-primary;
 
       &:hover {
-        background: #2563eb;
-        border-color: #2563eb;
+        background: $color-primary-darker;
+        border-color: $color-primary-darker;
       }
     }
   }
@@ -45,7 +47,7 @@
 
 .divider {
   width: 1px;
-  background: #d1d5db;
+  background: $color-gray-300;
   margin: 0 0.25rem;
 }
 
@@ -106,20 +108,20 @@
 
     blockquote {
       padding-left: 1rem;
-      border-left: 3px solid #d1d5db;
-      color: #6b7280;
+      border-left: 3px solid $color-gray-300;
+      color: $color-text-secondary;
       font-style: italic;
       margin: 1em 0;
     }
 
     hr {
       border: none;
-      border-top: 2px solid #e5e7eb;
+      border-top: 2px solid $color-border-base;
       margin: 2rem 0;
     }
 
     code {
-      background: #f3f4f6;
+      background: $color-bg-hover;
       padding: 0.2em 0.4em;
       border-radius: 3px;
       font-size: 0.9em;
@@ -127,8 +129,8 @@
     }
 
     pre {
-      background: #1f2937;
-      color: #f9fafb;
+      background: $color-gray-800;
+      color: $color-bg-secondary;
       padding: 1rem;
       border-radius: 6px;
       overflow-x: auto;
@@ -175,6 +177,6 @@
   align-items: center;
   height: 100%;
   min-height: 300px;
-  color: #6b7280;
+  color: $color-text-secondary;
   font-size: 1rem;
 }

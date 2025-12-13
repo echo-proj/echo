@@ -1,3 +1,5 @@
+@import '@/styles/variables';
+
 @import '../../styles/variables.scss';
 
 .registerPage {
@@ -5,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, $color-gradient-start 0%, $color-gradient-end 100%);
   padding: $spacing-lg;
 }
 
@@ -28,11 +30,11 @@
     font-size: $font-size-3xl;
     font-weight: $font-weight-bold;
     margin-bottom: $spacing-sm;
-    color: #1f2937;
+    color: $color-gray-800;
   }
 
   p {
-    color: #6b7280;
+    color: $color-text-secondary;
     font-size: $font-size-base;
   }
 }
@@ -45,9 +47,9 @@
 
 .error {
   padding: $spacing-md;
-  background-color: #fee;
-  border: 2px solid #ef4444;
-  color: #991b1b;
+  background-color: $color-error-light;
+  border: 2px solid $color-error;
+  color: $color-error-darker;
   font-size: $font-size-sm;
 }
 
@@ -60,15 +62,15 @@
   margin-top: $spacing-xl;
   text-align: center;
   font-size: $font-size-sm;
-  color: #6b7280;
+  color: $color-text-secondary;
 
   .link {
-    color: #6366f1;
+    color: $color-accent;
     font-weight: $font-weight-medium;
     transition: color $transition-base;
 
     &:hover {
-      color: #4f46e5;
+      color: $color-accent-dark;
       text-decoration: underline;
     }
   }

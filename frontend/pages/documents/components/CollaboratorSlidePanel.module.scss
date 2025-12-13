@@ -1,3 +1,5 @@
+@import '@/styles/variables';
+
 .backdrop {
   position: absolute;
   inset: 0;
@@ -26,7 +28,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid $color-border-base;
   background: white;
   flex-shrink: 0;
 }
@@ -35,7 +37,7 @@
   flex-shrink: 0;
 
   &:hover {
-    background-color: #f3f4f6;
+    background-color: $color-bg-hover;
   }
 }
 

@@ -1,17 +1,19 @@
+@import '@/styles/variables';
+
 .layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f9fafb;
+  background-color: $color-bg-secondary;
 }
 
 .header {
-  background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background-color: $color-bg-base;
+  border-bottom: 1px solid $color-border-base;
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: $shadow-base;
 }
 
 .headerContent {
@@ -42,14 +44,14 @@
 .logoIcon {
   width: 1.75rem;
   height: 1.75rem;
-  color: #3b82f6;
+  color: $color-primary;
 }
 
 .logoText {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: $color-text-primary;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -68,19 +70,19 @@
   transform: translateY(-50%);
   width: 1rem;
   height: 1rem;
-  color: #9ca3af;
+  color: $color-text-tertiary;
   pointer-events: none;
 }
 
 .searchInput {
   padding-left: 2.5rem !important;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background-color: $color-bg-secondary;
+  border: 1px solid $color-border-base;
   transition: all 0.2s;
 
   &:focus {
-    background-color: #ffffff;
-    border-color: #3b82f6;
+    background-color: $color-bg-base;
+    border-color: $color-primary;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 }
@@ -97,21 +99,21 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: $border-radius-base;
   border: none;
   background-color: transparent;
   cursor: pointer;
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #f3f4f6;
+    background-color: $color-bg-hover;
   }
 }
 
 .avatar {
   width: 2.25rem;
   height: 2.25rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid $color-border-base;
 }
 
 .userInfo {
@@ -124,23 +126,23 @@
 .userName {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #111827;
+  color: $color-text-primary;
   line-height: 1.2;
 }
 
 .userRole {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: $color-text-secondary;
   line-height: 1.2;
 }
 
 .logoutButton {
-  border-color: #e5e7eb;
+  border-color: $color-border-base;
 
   &:hover {
-    background-color: #fee2e2;
-    border-color: #fecaca;
-    color: #dc2626;
+    background-color: $color-error-light;
+    border-color: $color-error-lighter;
+    color: $color-error-dark;
   }
 }
 
