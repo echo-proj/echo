@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { useCreateVersion, useDeleteVersion, useDocumentVersions, useRestoreVersion } from '@/hooks/useDocuments';
+import React from 'react';
+import { useDeleteVersion, useDocumentVersions, useRestoreVersion } from '@/hooks/useDocuments';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Clock, Save, RotateCcw, Trash2, History } from 'lucide-react';
+import { Clock, RotateCcw, Trash2, History } from 'lucide-react';
 import styles from './VersionHistory.module.scss';
 
 function formatTimeAgo(date: string): string {
@@ -16,16 +15,6 @@ function formatTimeAgo(date: string): string {
   if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
   return then.toLocaleDateString();
 }
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 
 interface VersionHistoryProps {
   documentId: string;
@@ -34,27 +23,11 @@ interface VersionHistoryProps {
 }
 
 export function VersionHistory({ documentId, ownerUsername, currentUsername }: VersionHistoryProps) {
-  const [label, setLabel] = useState('');
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-
   const { data: versions, isLoading } = useDocumentVersions(documentId);
-  const createVersion = useCreateVersion();
   const restoreVersion = useRestoreVersion();
   const deleteVersion = useDeleteVersion();
 
   const isOwner = currentUsername === ownerUsername;
-
-  const handleSaveVersion = () => {
-    createVersion.mutate(
-      { documentId, data: { label: label || undefined } },
-      {
-        onSuccess: () => {
-          setLabel('');
-          setSaveDialogOpen(false);
-        },
-      }
-    );
-  };
 
   const handleRestore = (versionId: string) => {
     if (confirm('Are you sure you want to restore this version? Current content will be replaced.')) {
@@ -75,43 +48,6 @@ export function VersionHistory({ documentId, ownerUsername, currentUsername }: V
           <History className={styles.icon} />
           <h3>Version History</h3>
         </div>
-        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" variant="outline">
-              <Save className="w-4 h-4 mr-2" />
-              Save Version
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Save Document Version</DialogTitle>
-              <DialogDescription>
-                Create a snapshot of the current document state. You can add an optional label to help identify this
-                version later.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="version-label">Label (optional)</Label>
-                <Input
-                  id="version-label"
-                  placeholder="e.g., Draft 1, Before refactor, etc."
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  maxLength={100}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveVersion} disabled={createVersion.isPending}>
-                {createVersion.isPending ? 'Saving...' : 'Save Version'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <div className={styles.versionList}>
