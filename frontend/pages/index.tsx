@@ -24,13 +24,6 @@ export default function Landing() {
               >
                 Get Started Free
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => router.push('/login')}
-              >
-                Sign In
-              </Button>
             </div>
             <div className={styles.features}>
               <div className={styles.feature}>

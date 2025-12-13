@@ -31,11 +31,11 @@
   flex-direction: column;
   background-color: $color-bg-secondary;
   overflow: hidden;
-  padding-top: .5rem;
+  padding-top: $spacing-sm;
 }
 
 .headerWrapper {
-  padding: 1.5rem 1.5rem 1rem;
+  padding: $spacing-lg $spacing-lg $spacing-md;
   border-bottom: 1px solid $color-border-base;
   display: flex;
   flex-direction: column;
@@ -46,12 +46,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: $spacing-md;
 }
 
 .actionButtons {
   display: flex;
-  gap: 0.5rem;
+  gap: $spacing-sm;
   flex-shrink: 0;
 }
 
@@ -61,12 +61,12 @@
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-semibold;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: $spacing-sm;
   flex: 1;
   min-width: 0;
 }
@@ -80,20 +80,20 @@
 
 .collaboratorButton {
   flex-shrink: 0;
-  margin-top: 0.25rem;
+  margin-top: $spacing-xs;
 }
 
 .documentInfo {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: $spacing-md;
 }
 
 .infoItem {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: $spacing-sm;
+  font-size: $font-size-sm;
 }
 
 .infoIcon {
@@ -114,8 +114,8 @@
 .loadingContainer {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: $spacing-sm;
+  font-size: $font-size-sm;
   color: $color-text-secondary;
 }
 
@@ -137,7 +137,7 @@
 .editorWrapper {
   flex: 1;
   overflow: hidden;
-  padding: 0 1.5rem 1.5rem;
+  padding: 0 $spacing-lg $spacing-lg;
   display: flex;
   flex-direction: column;
 }
@@ -152,7 +152,7 @@
 .sheetBody {
   flex: 1;
   overflow: hidden;
-  margin-top: 1.5rem;
+  margin-top: $spacing-lg;
   display: flex;
   flex-direction: column;
 }
@@ -164,7 +164,7 @@
   align-items: center;
   height: 100%;
   min-height: 400px;
-  font-size: 1rem;
+  font-size: $font-size-base;
 }
 
 .loading {
@@ -186,12 +186,12 @@
   .headerWrapper {
     flex-direction: column;
     align-items: stretch;
-    padding: 1rem;
+    padding: $spacing-md;
   }
 
   .title {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
+    font-size: $font-size-xl;
+    margin-bottom: $spacing-sm;
   }
 
   .titleIcon {
@@ -206,7 +206,7 @@
 
   .documentInfo {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: $spacing-sm;
   }
 
   .infoItem {
@@ -214,7 +214,7 @@
   }
 
   .editorWrapper {
-    padding: 0 1rem 1rem;
+    padding: 0 $spacing-md $spacing-md;
   }
 
   .sheetContent {
