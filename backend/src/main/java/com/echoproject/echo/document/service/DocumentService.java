@@ -2,6 +2,7 @@ package com.echoproject.echo.document.service;
 
 import com.echoproject.echo.common.exception.BadRequestException;
 import com.echoproject.echo.common.exception.NotFoundException;
+import com.echoproject.echo.document.domain.CollaboratorFilter;
 import com.echoproject.echo.document.domain.DocumentAccessControl;
 import com.echoproject.echo.document.dto.AddCollaboratorRequest;
 import com.echoproject.echo.document.dto.CollaboratorResponse;
@@ -14,7 +15,9 @@ import com.echoproject.echo.document.models.DocumentContent;
 import com.echoproject.echo.document.repository.DocumentCollaboratorRepository;
 import com.echoproject.echo.document.repository.DocumentContentRepository;
 import com.echoproject.echo.document.repository.DocumentRepository;
+import com.echoproject.echo.user.dto.UserSearchResponse;
 import com.echoproject.echo.user.models.User;
+import com.echoproject.echo.user.models.UserProfile;
 import com.echoproject.echo.user.repository.UserRepository;
 import java.util.Collections;
 import java.util.List;
@@ -135,6 +138,47 @@ public class DocumentService {
     }
 
     collaboratorRepository.deleteByDocumentIdAndUserId(documentId, collaboratorUserId);
+  }
+
+  @Transactional(readOnly = true)
+  public List<UserSearchResponse> searchAvailableCollaborators(UUID userId, UUID documentId, String query) {
+    if (query == null || query.trim().isEmpty()) {
+      return List.of();
+    }
+
+    Document document =
+        documentRepository
+            .findById(documentId)
+            .orElseThrow(() -> new NotFoundException("Document not found"));
+
+    Set<UUID> collaboratorIds =
+        collaboratorRepository.findByDocumentId(documentId).stream()
+            .map(dc -> dc.getUser().getId())
+            .collect(Collectors.toSet());
+
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+      throw new BadRequestException("Access denied");
+    }
+
+    List<User> users = userRepository.searchByUsername(query.trim());
+
+    List<User> availableUsers = CollaboratorFilter.filterAvailableCollaborators(
+        users,
+        document.getOwner().getId(),
+        collaboratorIds
+    );
+
+    return availableUsers.stream()
+        .map(user -> {
+          UserProfile profile = user.getProfile();
+          return new UserSearchResponse(
+              user.getId(),
+              user.getUsername(),
+              profile != null ? profile.getFullName() : null,
+              profile != null ? profile.getProfilePicture() : null);
+        })
+        .limit(10)
+        .collect(Collectors.toList());
   }
 
   @Transactional(readOnly = true)

@@ -14,6 +14,8 @@ import com.echoproject.echo.document.repository.DocumentContentRepository;
 import com.echoproject.echo.document.repository.DocumentRepository;
 import com.echoproject.echo.document.service.DocumentService;
 import com.echoproject.echo.user.models.User;
+import com.echoproject.echo.user.models.UserProfile;
+import com.echoproject.echo.user.repository.UserProfileRepository;
 import com.echoproject.echo.user.repository.UserRepository;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +39,8 @@ class DocumentServiceIntegrationTest {
 
   @Autowired private UserRepository userRepository;
 
+  @Autowired private UserProfileRepository userProfileRepository;
+
   @Autowired private PasswordEncoder passwordEncoder;
 
   private User owner;
@@ -47,13 +51,24 @@ class DocumentServiceIntegrationTest {
     contentRepository.deleteAll();
     collaboratorRepository.deleteAll();
     documentRepository.deleteAll();
+    userProfileRepository.deleteAll();
     userRepository.deleteAll();
 
     owner = new User("owner", passwordEncoder.encode("password"));
     userRepository.save(owner);
 
+    UserProfile ownerProfile = new UserProfile();
+    ownerProfile.setUser(owner);
+    ownerProfile.setFullName("Owner User");
+    userProfileRepository.save(ownerProfile);
+
     collaborator = new User("collaborator", passwordEncoder.encode("password"));
     userRepository.save(collaborator);
+
+    UserProfile collaboratorProfile = new UserProfile();
+    collaboratorProfile.setUser(collaborator);
+    collaboratorProfile.setFullName("Collaborator User");
+    userProfileRepository.save(collaboratorProfile);
   }
 
   @Test
@@ -173,5 +188,30 @@ class DocumentServiceIntegrationTest {
     assertThat(response.getDocumentId()).isEqualTo(doc.getId());
     assertThat(response.getState()).isEqualTo(testState);
     assertThat(response.getUpdatedAt()).isNotNull();
+  }
+
+  @Test
+  void searchAvailableCollaborators_shouldReturnFilteredUsers() {
+    // Given
+    Document doc = new Document("Test Doc", owner);
+    documentRepository.save(doc);
+
+    DocumentCollaborator existingCollaborator = new DocumentCollaborator(doc, collaborator);
+    collaboratorRepository.save(existingCollaborator);
+
+    User availableUser = new User("collab", passwordEncoder.encode("password"));
+    userRepository.save(availableUser);
+
+    UserProfile availableProfile = new UserProfile();
+    availableProfile.setUser(availableUser);
+    availableProfile.setFullName("Available User");
+    userProfileRepository.save(availableProfile);
+
+    List<com.echoproject.echo.user.dto.UserSearchResponse> results =
+        documentService.searchAvailableCollaborators(owner.getId(), doc.getId(), "co");
+
+    // Then
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getUsername()).isEqualTo("collab");
   }
 }

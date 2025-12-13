@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useSearchUsers, useAddCollaborator, useRemoveCollaborator } from '@/hooks/useUsers';
+import { useSearchAvailableCollaborators } from '@/hooks/useDocuments';
+import { useAddCollaborator, useRemoveCollaborator } from '@/hooks/useUsers';
 import { Collaborator, UserSearchResult } from '@/pages/documents/type';
 import { UserPlus, Search, Loader2, UserMinus, Users, AlertCircle, X } from 'lucide-react';
 import { getErrorMessage } from "@/lib/utils";
@@ -59,7 +60,7 @@ export function CollaboratorSlidePanel({
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery] = useDebounce(searchQuery, 300);
 
-  const { data: searchResults = [], isLoading: isSearching } = useSearchUsers(debouncedQuery);
+  const { data: searchResults = [], isLoading: isSearching } = useSearchAvailableCollaborators(documentId, debouncedQuery);
   const addCollaboratorMutation = useAddCollaborator();
   const removeCollaboratorMutation = useRemoveCollaborator();
 

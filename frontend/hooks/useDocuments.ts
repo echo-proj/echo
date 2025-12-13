@@ -55,7 +55,15 @@ export const useDeleteDocument = () => {
   });
 };
 
-// Version hooks
+export const useSearchAvailableCollaborators = (documentId: string, query: string) => {
+  return useQuery({
+    queryKey: ['documents', documentId, 'available-collaborators', query],
+    queryFn: () => documentsApi.searchAvailableCollaborators(documentId, query),
+    enabled: !!documentId && !!query.trim(),
+    staleTime: 30000, // 30 seconds
+  });
+};
+
 export const useDocumentVersions = (documentId: string) => {
   return useQuery({
     queryKey: ['documents', documentId, 'versions'],

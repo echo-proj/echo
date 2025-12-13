@@ -1,5 +1,5 @@
 import { axiosInstance } from '../axios';
-import DocumentVersion, {AddCollaboratorRequest, CreateDocumentRequest, CreateVersionRequest, Document} from "@/pages/documents/type";
+import DocumentVersion, {AddCollaboratorRequest, CreateDocumentRequest, CreateVersionRequest, Document, UserSearchResult} from "@/pages/documents/type";
 
 export const documentsApi = {
   getAll: async (): Promise<Document[]> => {
@@ -34,6 +34,13 @@ export const documentsApi = {
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
     });
+  },
+
+  searchAvailableCollaborators: async (documentId: string, query: string): Promise<UserSearchResult[]> => {
+    const response = await axiosInstance.get(`/api/documents/${documentId}/available-collaborators`, {
+      params: { query },
+    });
+    return response.data;
   },
 
   addCollaborator: async (documentId: string, data: AddCollaboratorRequest): Promise<void> => {

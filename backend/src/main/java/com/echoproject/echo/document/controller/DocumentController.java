@@ -8,6 +8,7 @@ import com.echoproject.echo.document.dto.ValidateDocumentAccessRequest;
 import com.echoproject.echo.document.dto.ValidateDocumentAccessResponse;
 import com.echoproject.echo.document.service.DocumentService;
 import com.echoproject.echo.security.service.CustomUserDetails;
+import com.echoproject.echo.user.dto.UserSearchResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -50,6 +51,15 @@ public class DocumentController {
       @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable UUID id) {
     documentService.deleteDocument(userDetails.getId(), id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/{id}/available-collaborators")
+  public ResponseEntity<List<UserSearchResponse>> searchAvailableCollaborators(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PathVariable UUID id,
+      @RequestParam(required = false) String query) {
+    List<UserSearchResponse> users = documentService.searchAvailableCollaborators(userDetails.getId(), id, query);
+    return ResponseEntity.ok(users);
   }
 
   @PostMapping("/{id}/collaborators")
