@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Search, FileText } from 'lucide-react';
+import { authStorage } from '@/lib/auth';
 import styles from './AuthenticatedLayout.module.scss';
 
 interface AuthenticatedLayoutProps {
@@ -27,8 +28,7 @@ export function AuthenticatedLayout({
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    authStorage.clearAuth();
     router.push('/login');
   };
 

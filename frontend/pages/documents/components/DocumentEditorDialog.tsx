@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {TiptapEditor} from "@/pages/documents/components/TiptapEditor";
+import { authStorage } from '@/lib/auth';
 
 interface DocumentEditorDialogProps {
   documentId: string | null;
@@ -139,7 +140,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
           <VersionHistory
             documentId={documentId}
             ownerUsername={document?.ownerUsername || ''}
-            currentUsername={localStorage.getItem('username') || undefined}
+            currentUsername={authStorage.getUsername() || undefined}
           />
         </div>
 

@@ -6,6 +6,7 @@ import * as Y from 'yjs';
 import {WebsocketProvider} from 'y-websocket';
 import styles from './TiptapEditor.module.scss';
 import {useDocumentContent, useSaveDocumentContent} from '@/hooks/useDocuments';
+import {authStorage} from '@/lib/auth';
 
 interface TiptapEditorProps {
   documentId: string;
@@ -23,7 +24,7 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
 
   const [{ ydoc, provider }] = useState(() => {
     const doc = new Y.Doc();
-    const token = localStorage.getItem('auth_token');
+    const token = authStorage.getToken();
 
     const wsProvider = new WebsocketProvider(
       COLLABORATION_WS_URL,
