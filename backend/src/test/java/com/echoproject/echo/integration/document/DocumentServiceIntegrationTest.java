@@ -6,6 +6,7 @@ import com.echoproject.echo.document.dto.AddCollaboratorRequest;
 import com.echoproject.echo.document.dto.CreateDocumentRequest;
 import com.echoproject.echo.document.dto.DocumentContentResponse;
 import com.echoproject.echo.document.dto.DocumentResponse;
+import com.echoproject.echo.document.dto.UpdateDocumentRequest;
 import com.echoproject.echo.document.models.Document;
 import com.echoproject.echo.document.models.DocumentCollaborator;
 import com.echoproject.echo.document.models.DocumentContent;
@@ -126,6 +127,24 @@ class DocumentServiceIntegrationTest {
 
     // Then
     assertThat(documentRepository.findById(doc.getId())).isEmpty();
+  }
+
+  @Test
+  void updateDocument_shouldUpdateTitleSuccessfully() {
+    // Given
+    Document doc = new Document("Original Title", owner);
+    documentRepository.save(doc);
+    UpdateDocumentRequest request = new UpdateDocumentRequest("Updated Title");
+
+    // When
+    DocumentResponse response = documentService.updateDocument(owner.getId(), doc.getId(), request);
+
+    // Then
+    assertThat(response.getTitle()).isEqualTo("Updated Title");
+    assertThat(response.getId()).isEqualTo(doc.getId());
+
+    Document updatedDoc = documentRepository.findById(doc.getId()).orElseThrow();
+    assertThat(updatedDoc.getTitle()).isEqualTo("Updated Title");
   }
 
   @Test
