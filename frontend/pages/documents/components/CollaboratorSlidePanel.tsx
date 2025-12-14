@@ -75,13 +75,14 @@ export function CollaboratorSlidePanel({
     removeCollaboratorMutation.mutate({ documentId, userId });
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      <div className={styles.backdrop} onClick={onClose} />
+      <div
+        className={`${styles.backdrop} ${isOpen ? styles.backdropOpen : styles.backdropClosed}`}
+        onClick={onClose}
+      />
 
-      <div className={styles.slidePanel}>
+      <div className={`${styles.slidePanel} ${isOpen ? styles.slidePanelOpen : styles.slidePanelClosed}`}>
         <div className={styles.header}>
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
