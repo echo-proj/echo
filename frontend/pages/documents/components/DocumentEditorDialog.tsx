@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {TiptapEditor} from "@/pages/documents/components/TiptapEditor";
+import { ActiveCollaborators } from '@/pages/documents/components/ActiveCollaborators';
 import { authStorage } from '@/lib/auth';
 
 interface DocumentEditorDialogProps {
@@ -25,6 +26,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
   const [versionLabel, setVersionLabel] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
+  const [activeUsers, setActiveUsers] = useState<Array<{ name: string; color: string }>>([]);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const createVersion = useCreateVersion();
   const updateDocument = useUpdateDocument();
@@ -144,6 +146,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
 
                 {!isLoading && document && (
                   <div className={styles.actionButtons}>
+                    <ActiveCollaborators users={activeUsers} />
                     <Button
                       variant="outline"
                       size="sm"
@@ -222,7 +225,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
           </DialogHeader>
 
           <div className={styles.editorWrapper}>
-            {open && <TiptapEditor documentId={documentId} />}
+            {open && <TiptapEditor documentId={documentId} onActiveUsersChange={setActiveUsers} />}
           </div>
         </div>
 

@@ -10,11 +10,29 @@ import {authStorage} from '@/lib/auth';
 
 interface TiptapEditorProps {
   documentId: string;
+  onActiveUsersChange?: (users: Array<{ name: string; color: string }>) => void;
+}
+
+interface AwarenessUserState {
+  user?: {
+    name: string;
+    color: string;
+  };
 }
 
 const COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
 
-export function TiptapEditor({ documentId }: TiptapEditorProps) {
+function getUserColor(username: string): string {
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const hue = hash % 360;
+  return `hsl(${hue}, 70%, 60%)`;
+}
+
+export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorProps) {
   const [synced, setSynced] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const CLIENT_SAVE_DEBOUNCE_MS = 600;
@@ -25,6 +43,7 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
   const [{ ydoc, provider }] = useState(() => {
     const doc = new Y.Doc();
     const token = authStorage.getToken();
+    const username = authStorage.getUsername() || 'Anonymous';
 
     const wsProvider = new WebsocketProvider(
       COLLABORATION_WS_URL,
@@ -38,6 +57,11 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
       }
     );
 
+    wsProvider.awareness.setLocalStateField('user', {
+      name: username,
+      color: getUserColor(username),
+    });
+
     return { ydoc: doc, provider: wsProvider };
   });
 
@@ -46,6 +70,31 @@ export function TiptapEditor({ documentId }: TiptapEditorProps) {
       Y.applyUpdate(ydoc, contentData);
     }
   }, [contentData, synced, ydoc]);
+
+  useEffect(() => {
+    const updateUsers = () => {
+      const states = provider.awareness.getStates();
+      const users: Array<{ name: string; color: string }> = [];
+
+      states.forEach((state: AwarenessUserState) => {
+        if (state.user) {
+          users.push({
+            name: state.user.name,
+            color: state.user.color,
+          });
+        }
+      });
+
+      onActiveUsersChange?.(users);
+    };
+
+    provider.awareness.on('change', updateUsers);
+    updateUsers();
+
+    return () => {
+      provider.awareness.off('change', updateUsers);
+    };
+  }, [provider, onActiveUsersChange]);
 
 
   useEffect(() => {

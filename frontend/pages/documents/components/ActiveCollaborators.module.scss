@@ -1,0 +1,140 @@
+@import '@/styles/variables';
+
+.container {
+  display: flex;
+  align-items: center;
+}
+
+.avatarGroup {
+  display: flex;
+  align-items: center;
+  margin-right: $spacing-md;
+
+  > * {
+    margin-left: -$spacing-sm;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: $border-radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  cursor: default;
+  border: 2px solid white;
+  box-shadow: $shadow-base;
+  transition: transform $transition-base, z-index $transition-base;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    z-index: 10;
+  }
+}
+
+.avatarMore {
+  width: 32px;
+  height: 32px;
+  border-radius: $border-radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-gray-300;
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: $shadow-base;
+  transition: all $transition-base;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: $color-gray-400;
+    z-index: 100;
+  }
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: $border-radius-base;
+  box-shadow: $shadow-lg;
+  padding: $spacing-sm;
+  min-width: 200px;
+  max-width: 280px;
+  z-index: 1000;
+  animation: fadeIn $transition-base;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.popoverHeader {
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  border-bottom: 1px solid $color-border-base;
+}
+
+.popoverContent {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: $spacing-xs;
+}
+
+.popoverUser {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  transition: background $transition-base;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.popoverAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: $border-radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-xs;
+  flex-shrink: 0;
+}
+
+.popoverName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
