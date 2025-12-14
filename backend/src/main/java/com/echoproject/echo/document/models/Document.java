@@ -7,6 +7,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -21,6 +22,7 @@ public class Document {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
+  @Setter
   @Column(nullable = false)
   private String title;
 

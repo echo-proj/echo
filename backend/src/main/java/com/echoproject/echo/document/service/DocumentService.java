@@ -9,6 +9,7 @@ import com.echoproject.echo.document.dto.CollaboratorResponse;
 import com.echoproject.echo.document.dto.CreateDocumentRequest;
 import com.echoproject.echo.document.dto.DocumentContentResponse;
 import com.echoproject.echo.document.dto.DocumentResponse;
+import com.echoproject.echo.document.dto.UpdateDocumentRequest;
 import com.echoproject.echo.document.models.Document;
 import com.echoproject.echo.document.models.DocumentCollaborator;
 import com.echoproject.echo.document.models.DocumentContent;
@@ -85,6 +86,31 @@ public class DocumentService {
     }
 
     documentRepository.delete(document);
+  }
+
+  @Transactional
+  public DocumentResponse updateDocument(UUID userId, UUID documentId, UpdateDocumentRequest request) {
+    Document document =
+        documentRepository
+            .findById(documentId)
+            .orElseThrow(() -> new NotFoundException("Document not found"));
+
+    Set<UUID> collaboratorIds =
+        collaboratorRepository.findByDocumentId(documentId).stream()
+            .map(dc -> dc.getUser().getId())
+            .collect(Collectors.toSet());
+
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+      throw new BadRequestException("Access denied");
+    }
+
+    document.setTitle(request.getTitle());
+    documentRepository.save(document);
+
+    List<DocumentCollaborator> documentCollaborators =
+        collaboratorRepository.findByDocumentId(documentId);
+
+    return toResponseWithCollaborators(document, documentCollaborators);
   }
 
   @Transactional

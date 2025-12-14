@@ -1,11 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { CollaboratorSlidePanel } from '@/pages/documents/components/CollaboratorSlidePanel';
 import { VersionHistory } from '@/pages/documents/components/VersionHistory';
-import { useDocument, useCreateVersion } from '@/hooks/useDocuments';
-import { Loader2, FileText, User, Calendar, Users, Save } from 'lucide-react';
+import { useDocument, useCreateVersion, useUpdateDocument } from '@/hooks/useDocuments';
+import { Loader2, FileText, User, Calendar, Users, Save, Check, X } from 'lucide-react';
 import styles from './DocumentEditorDialog.module.scss';
 import { formatDate } from "@/lib/utils";
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,18 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
   const [isCollaboratorPanelOpen, setIsCollaboratorPanelOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [versionLabel, setVersionLabel] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const createVersion = useCreateVersion();
+  const updateDocument = useUpdateDocument();
+
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
 
   const handleSaveVersion = () => {
     createVersion.mutate(
@@ -37,6 +48,45 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
     );
   };
 
+  const handleStartEditTitle = () => {
+    setEditedTitle(document?.title || '');
+    setIsEditingTitle(true);
+  };
+
+  const handleSaveTitle = () => {
+    if (!documentId || !editedTitle.trim() || editedTitle === document?.title) {
+      setIsEditingTitle(false);
+      setEditedTitle(document?.title || '');
+      return;
+    }
+
+    updateDocument.mutate(
+      { id: documentId, data: { title: editedTitle.trim() } },
+      {
+        onSuccess: () => {
+          setIsEditingTitle(false);
+        },
+        onError: () => {
+          setEditedTitle(document?.title || '');
+          setIsEditingTitle(false);
+        },
+      }
+    );
+  };
+
+  const handleCancelEditTitle = () => {
+    setEditedTitle(document?.title || '');
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSaveTitle();
+    } else if (e.key === 'Escape') {
+      handleCancelEditTitle();
+    }
+  };
+
   if (!documentId) return null;
 
   return (
@@ -47,10 +97,50 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
           <DialogHeader>
             <div className={styles.headerWrapper}>
               <div className={styles.titleRow}>
-                <DialogTitle className={styles.title}>
-                  <FileText className={styles.titleIcon} />
-                  {isLoading ? 'Loading...' : document?.title || 'Document Editor'}
-                </DialogTitle>
+                {isEditingTitle ? (
+                  <div className={styles.titleEditContainer}>
+                    <FileText className={styles.titleIcon} />
+                    <Input
+                      ref={titleInputRef}
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      onKeyDown={handleTitleKeyDown}
+                      onBlur={handleSaveTitle}
+                      disabled={updateDocument.isPending}
+                      className={styles.titleInput}
+                    />
+                    <div className={styles.titleEditActions}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className={styles.titleEditButton}
+                        onClick={handleSaveTitle}
+                        disabled={updateDocument.isPending}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className={styles.titleEditButton}
+                        onClick={handleCancelEditTitle}
+                        disabled={updateDocument.isPending}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <DialogTitle
+                    className={styles.title}
+                    onDoubleClick={!isLoading && document ? handleStartEditTitle : undefined}
+                  >
+                    <FileText className={styles.titleIcon} />
+                    <span className={styles.titleText}>
+                      {isLoading ? 'Loading...' : document?.title || 'Document Editor'}
+                    </span>
+                  </DialogTitle>
+                )}
 
                 {!isLoading && document && (
                   <div className={styles.actionButtons}>

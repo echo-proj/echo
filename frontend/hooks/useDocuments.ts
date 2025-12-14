@@ -44,6 +44,19 @@ export const useCreateDocument = () => {
   });
 };
 
+export const useUpdateDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { title: string } }) =>
+      documentsApi.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['documents', variables.id] });
+    },
+  });
+};
+
 export const useDeleteDocument = () => {
   const queryClient = useQueryClient();
 

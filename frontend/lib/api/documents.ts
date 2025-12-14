@@ -17,6 +17,11 @@ export const documentsApi = {
     return response.data;
   },
 
+  update: async (id: string, data: { title: string }): Promise<Document> => {
+    const response = await axiosInstance.put(`/api/documents/${id}`, data);
+    return response.data;
+  },
+
   delete: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/api/documents/${id}`);
   },

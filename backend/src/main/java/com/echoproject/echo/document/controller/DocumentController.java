@@ -4,6 +4,7 @@ import com.echoproject.echo.document.dto.AddCollaboratorRequest;
 import com.echoproject.echo.document.dto.CreateDocumentRequest;
 import com.echoproject.echo.document.dto.DocumentContentResponse;
 import com.echoproject.echo.document.dto.DocumentResponse;
+import com.echoproject.echo.document.dto.UpdateDocumentRequest;
 import com.echoproject.echo.document.dto.ValidateDocumentAccessRequest;
 import com.echoproject.echo.document.dto.ValidateDocumentAccessResponse;
 import com.echoproject.echo.document.service.DocumentService;
@@ -43,6 +44,15 @@ public class DocumentController {
   public ResponseEntity<DocumentResponse> getDocument(
       @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable UUID id) {
     DocumentResponse document = documentService.getDocument(userDetails.getId(), id);
+    return ResponseEntity.ok(document);
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<DocumentResponse> updateDocument(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PathVariable UUID id,
+      @Valid @RequestBody UpdateDocumentRequest request) {
+    DocumentResponse document = documentService.updateDocument(userDetails.getId(), id, request);
     return ResponseEntity.ok(document);
   }
 
