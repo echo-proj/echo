@@ -3,35 +3,11 @@
 .landing {
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, $color-gradient-start 0%, $color-gradient-end 50%, $color-gradient-pink 100%);
+  background-color: $color-page-background;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 1000px;
-    height: 1000px;
-    background: radial-gradient(circle, rgba($color-white, 0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    z-index: 0;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -30%;
-    left: -10%;
-    width: 800px;
-    height: 800px;
-    background: radial-gradient(circle, rgba($color-white, 0.08) 0%, transparent 70%);
-    border-radius: 50%;
-    z-index: 0;
-  }
 }
 
 .hero {
@@ -45,7 +21,7 @@
   margin: 0 auto;
   position: relative;
   z-index: 1;
-  color: $color-white;
+  color: $color-text-primary;
 }
 
 .title {
@@ -53,15 +29,11 @@
   font-weight: $font-weight-bold;
   margin-bottom: $spacing-lg;
   line-height: 1.2;
-  color: $color-white;
+  color: $color-text-primary;
 }
 
 .gradient {
-  background: linear-gradient(135deg, $color-gradient-yellow 0%, $color-primary-light 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  display: inline-block;
+  color: $color-primary;
 }
 
 .subtitle {
@@ -95,15 +67,16 @@
   align-items: center;
   gap: $spacing-sm;
   padding: $spacing-md $spacing-lg;
-  background: rgba($color-white, 0.1);
+  background: rgba($color-primary-darker, 0.12);
   backdrop-filter: blur(10px);
   border-radius: 999px;
-  border: 1px solid rgba($color-white, 0.2);
+  border: 1px solid rgba($color-primary-darker, 0.3);
   font-weight: $font-weight-medium;
   transition: all $transition-base;
 
   &:hover {
-    background: rgba($color-white, 0.15);
+    background: rgba($color-primary-darker, 0.18);
+    border-color: rgba($color-primary-darker, 0.4);
     transform: translateY(-2px);
   }
 }

@@ -8,16 +8,16 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
-  --color-primary: #3b82f6;
+  --color-primary: #{$color-primary};
   --color-primary-foreground: #ffffff;
 
-  --color-secondary: #8b5cf6;
+  --color-secondary: #{$color-secondary};
   --color-secondary-foreground: #ffffff;
 
-  --color-accent: #f9fafb;
+  --color-accent: #{$color-accent};
   --color-accent-foreground: #111827;
 
-  --color-background: #ffffff;
+  --color-background: #{$color-page-background};
   --color-foreground: #111827;
 
   --color-card: #ffffff;
@@ -34,7 +34,7 @@
 
   --color-border: #e5e7eb;
   --color-input: #e5e7eb;
-  --color-ring: #3b82f6;
+  --color-ring: #{$color-primary};
 }
 
 @layer base {

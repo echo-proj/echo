@@ -2,7 +2,7 @@
 
 .documentsPage {
   min-height: 100vh;
-  background: linear-gradient(135deg, $color-gradient-start 0%, $color-gradient-end 100%);
+  background-color: $color-page-background;
   padding: $spacing-xl;
 }
 
@@ -23,7 +23,7 @@
 .title {
   font-size: $font-size-4xl;
   font-weight: $font-weight-bold;
-  color: white;
+  color: $color-text-primary;
   margin: 0;
 }
 
@@ -38,7 +38,7 @@
   text-align: center;
   padding: $spacing-2xl;
   font-size: $font-size-xl;
-  color: white;
+  color: $color-text-primary;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   backdrop-filter: blur(10px);
@@ -57,7 +57,7 @@
 
 .emptyStateContent {
   text-align: center;
-  color: white;
+  color: $color-text-primary;
   background: rgba(255, 255, 255, 0.1);
   padding: $spacing-2xl;
   border-radius: 16px;

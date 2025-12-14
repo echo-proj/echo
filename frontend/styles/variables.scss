@@ -1,15 +1,15 @@
 // Brand Colors
-$color-primary: #3b82f6;
-$color-primary-dark: #1d4ed8;
-$color-primary-darker: #2563eb;
-$color-primary-light: #19547b;
+$color-primary: #FD7979;
+$color-primary-dark: #FDACAC;
+$color-primary-darker: #FFCDC9;
+$color-primary-light: #FEEAC9;
 
-$color-secondary: #8b5cf6;
-$color-secondary-dark: #764ba2;
-$color-secondary-light: #667eea;
+$color-secondary: #FDACAC;
+$color-secondary-dark: #FFCDC9;
+$color-secondary-light: #FEEAC9;
 
-$color-accent: #6366f1;
-$color-accent-dark: #4f46e5;
+$color-accent: #FFCDC9;
+$color-accent-dark: #FDACAC;
 
 // Neutral Colors (Gray Scale)
 $color-white: #ffffff;
@@ -40,17 +40,14 @@ $color-warning-dark: #d97706;
 $color-info: #3b82f6;
 $color-info-dark: #2563eb;
 
-// Gradient Colors (for backgrounds)
-$color-gradient-start: #667eea;
-$color-gradient-end: #764ba2;
-$color-gradient-pink: #f093fb;
-$color-gradient-yellow: #ffd89b;
-
 // Background Colors
 $color-bg-base: $color-white;
 $color-bg-secondary: $color-gray-50;
 $color-bg-tertiary: $color-gray-100;
 $color-bg-hover: $color-gray-100;
+
+// App Page Background
+$color-page-background: #FAF3E1;
 
 // Border Colors
 $color-border-base: $color-gray-200;

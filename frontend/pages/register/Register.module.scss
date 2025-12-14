@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, $color-gradient-start 0%, $color-gradient-end 100%);
+  background-color: $color-page-background;
   padding: $spacing-lg;
 }
 
