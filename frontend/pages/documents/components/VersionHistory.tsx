@@ -3,6 +3,7 @@ import {useDeleteVersion, useDocumentVersions, useRestoreVersion} from '@/hooks/
 import {Button} from '@/components/ui/button';
 import {Clock, RotateCcw, Trash2, History} from 'lucide-react';
 import styles from './VersionHistory.module.scss';
+import { toast } from 'sonner';
 import {
     Dialog,
     DialogContent,
@@ -28,16 +29,12 @@ interface VersionHistoryProps {
     documentId: string;
     ownerUsername: string;
     currentUsername?: string;
-    onRestoreStart?: () => void;
-    onRestoreSuccess?: () => void;
 }
 
 export function VersionHistory({
                                    documentId,
                                    ownerUsername,
-                                   currentUsername,
-                                   onRestoreStart,
-                                   onRestoreSuccess
+                                   currentUsername
                                }: VersionHistoryProps) {
     const {data: versions, isLoading} = useDocumentVersions(documentId);
     const restoreVersion = useRestoreVersion();
@@ -54,21 +51,15 @@ export function VersionHistory({
 
     const confirmRestore = () => {
         if (!pendingVersionId) return;
-        onRestoreStart?.();
         restoreVersion.mutate(
             {documentId, versionId: pendingVersionId},
             {
-                onSuccess: () => {
-                    setConfirmOpen(false);
-                    setPendingVersionId(null);
-                    onRestoreSuccess?.();
-                },
-                onError: () => {
-                    setConfirmOpen(false);
-                    setPendingVersionId(null);
-                }
+                onSuccess: () => toast.success('Version restored'),
+                onError: () => toast.error('Failed to restore version')
             }
         );
+        setConfirmOpen(false);
+        setPendingVersionId(null);
     };
 
     const handleDelete = (versionId: string) => {

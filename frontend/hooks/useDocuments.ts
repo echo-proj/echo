@@ -98,15 +98,9 @@ export const useCreateVersion = () => {
 };
 
 export const useRestoreVersion = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({ documentId, versionId }: { documentId: string; versionId: string }) =>
       documentsApi.restoreVersion(documentId, versionId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['documents', variables.documentId, 'content'] });
-      queryClient.invalidateQueries({ queryKey: ['documents', variables.documentId] });
-    },
   });
 };
 

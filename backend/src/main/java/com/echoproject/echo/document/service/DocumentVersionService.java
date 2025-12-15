@@ -25,6 +25,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -162,16 +164,18 @@ public class DocumentVersionService {
     content.setState(version.getState());
     contentRepository.save(content);
 
-    // Notify collaboration service to reload the document from database
-    try {
-      String reloadUrl = collaborationServiceUrl + "/reload-document/" + documentId;
-      restTemplate.postForEntity(reloadUrl, null, Void.class);
-      log.info("Successfully notified collaboration service to reload document: {}", documentId);
-    } catch (Exception e) {
-      log.warn("Failed to notify collaboration service to reload document {}: {}", documentId, e.getMessage());
-      // Don't fail the restore operation if notification fails
-      // Version is already restored in DB, worst case users will need to refresh
-    }
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override
+      public void afterCommit() {
+        try {
+          String reloadUrl = collaborationServiceUrl + "/reload-document/" + documentId;
+          restTemplate.postForEntity(reloadUrl, null, Void.class);
+          log.info("Successfully notified collaboration service to reload document: {}", documentId);
+        } catch (Exception e) {
+          log.warn("Failed to notify collaboration service to reload document {}: {}", documentId, e.getMessage());
+        }
+      }
+    });
   }
 
   @Transactional

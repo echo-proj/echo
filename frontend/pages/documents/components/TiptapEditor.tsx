@@ -10,8 +10,6 @@ import {authStorage} from '@/lib/auth';
 interface TiptapEditorProps {
   documentId: string;
   onActiveUsersChange?: (users: Array<{ name: string; color: string }>) => void;
-  loading?: boolean;
-  onSynced?: () => void;
 }
 
 interface AwarenessUserState {
@@ -33,7 +31,7 @@ function getUserColor(username: string): string {
   return `hsl(${hue}, 70%, 60%)`;
 }
 
-export function TiptapEditor({ documentId, onActiveUsersChange, loading, onSynced }: TiptapEditorProps) {
+export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorProps) {
   const [synced, setSynced] = useState(false);
   const [sessionId, setSessionId] = useState(0);
 
@@ -90,7 +88,6 @@ export function TiptapEditor({ documentId, onActiveUsersChange, loading, onSynce
   useEffect(() => {
     const handleSync = (isSynced: boolean) => {
       if (isSynced) setSynced(true);
-      if (isSynced) onSynced?.();
     };
 
     provider.on('sync', handleSync);
@@ -134,12 +131,6 @@ export function TiptapEditor({ documentId, onActiveUsersChange, loading, onSynce
 
   return (
     <div className={styles.editorContainer}>
-      {loading && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.6)' }}>
-          <div className={styles.loading}>Restoring version…</div>
-        </div>
-      )}
-      
       <div className={styles.toolbar}>
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
