@@ -11,17 +11,27 @@ import url from 'url';
 import debounce from 'lodash.debounce';
 import { registerHttpEndpoints } from './http.js';
 
-const WS_PORT = process.env.PORT || 3001;
 const SPRING_BOOT_URL = process.env.SPRING_BOOT_URL || 'http://localhost:8080';
+const WS_PORT = process.env.PORT || 3001;
+const DEBOUNCE_TIME = 2000;
 
 const app = express();
 app.use(express.json());
 
 const documentTokens = new Map();
-
 const documents = new Map();
 
- 
+function send(ws, data) {
+  if (ws && ws.readyState === ws.OPEN) {
+    try { ws.send(data); } catch {}
+  }
+}
+
+function broadcast(conns, origin, data) {
+  for (const ws of conns) {
+    if (ws !== origin) send(ws, data);
+  }
+}
 
 async function validateDocumentAccess(token, documentId) {
   try {
@@ -73,16 +83,45 @@ function createSaveFunction(documentId) {
   return debounce(async (ydoc) => {
     const token = documentTokens.get(documentId);
     if (!token) return;
+
     const state = Y.encodeStateAsUpdate(ydoc);
     await saveDocumentContent(documentId, token, state);
-  }, 2000);
+  }, DEBOUNCE_TIME);
 }
 
 registerHttpEndpoints(app, { documents });
 
-const messageSync = 0;
-const messageAwareness = 1;
-const messageQueryAwareness = 3;
+const MSG_SYNC = 0;
+const MSG_AWARENESS = 1;
+const MSG_QUERY_AWARENESS = 3;
+
+function handleSyncMessage(dec, ws, entry) {
+  const enc = encoding.createEncoder();
+  encoding.writeVarUint(enc, MSG_SYNC);
+  syncProtocol.readSyncMessage(dec, enc, entry.ydoc, ws);
+
+  const reply = encoding.toUint8Array(enc);
+
+  if (reply.length > 1) send(ws, reply);
+}
+
+function handleQueryAwarenessMessage(ws, entry) {
+  const enc = encoding.createEncoder();
+  encoding.writeVarUint(enc, MSG_AWARENESS);
+  encoding.writeVarUint8Array(
+    enc,
+    awarenessProtocol.encodeAwarenessUpdate(
+      entry.awareness,
+      Array.from(entry.awareness.getStates().keys())
+    )
+  );
+  send(ws, encoding.toUint8Array(enc));
+}
+
+function handleAwarenessMessage(dec, ws, entry) {
+  const update = decoding.readVarUint8Array(dec);
+  awarenessProtocol.applyAwarenessUpdate(entry.awareness, update, ws);
+}
 
 function getOrCreateDocEntry(docName) {
   let entry = documents.get(docName);
@@ -94,34 +133,28 @@ function getOrCreateDocEntry(docName) {
     const saveFunc = createSaveFunction(docName);
 
     ydoc.on('update', (update, origin) => {
-      const encoder = encoding.createEncoder();
-      encoding.writeVarUint(encoder, messageSync);
-      syncProtocol.writeUpdate(encoder, update);
-      const msg = encoding.toUint8Array(encoder);
-      for (const ws of conns) {
-        if (ws !== origin && ws.readyState === ws.OPEN) {
-          try { ws.send(msg); } catch {}
-        }
-      }
+      const enc = encoding.createEncoder();
+
+      encoding.writeVarUint(enc, MSG_SYNC);
+      syncProtocol.writeUpdate(enc, update);
+      broadcast(conns, origin, encoding.toUint8Array(enc));
       saveFunc(ydoc);
     });
 
     awareness.on('update', ({ added, updated, removed }, origin) => {
-      const changedClients = added.concat(updated).concat(removed);
+      const changed = added.concat(updated).concat(removed);
+
       if (origin && wsClients.has(origin)) {
         const set = wsClients.get(origin);
-        added.forEach((c) => set.add(c));
-        removed.forEach((c) => set.delete(c));
+        for (const c of added) set.add(c);
+        for (const c of removed) set.delete(c);
       }
+
       const enc = encoding.createEncoder();
-      encoding.writeVarUint(enc, messageAwareness);
-      encoding.writeVarUint8Array(enc, awarenessProtocol.encodeAwarenessUpdate(awareness, changedClients));
-      const buff = encoding.toUint8Array(enc);
-      for (const ws of conns) {
-        if (ws !== origin && ws.readyState === ws.OPEN) {
-          try { ws.send(buff); } catch {}
-        }
-      }
+
+      encoding.writeVarUint(enc, MSG_AWARENESS);
+      encoding.writeVarUint8Array(enc, awarenessProtocol.encodeAwarenessUpdate(awareness, changed));
+      broadcast(conns, origin, encoding.toUint8Array(enc));
     });
 
     entry = { ydoc, awareness, conns, wsClients, saveFunc, loaded: false };
@@ -135,9 +168,13 @@ async function ensureLoaded(docName) {
   if (!token) {
     return;
   }
+
   const entry = getOrCreateDocEntry(docName);
+
   if (entry.loaded) return;
+
   const existing = await loadDocumentContent(token, docName);
+
   if (existing && existing.byteLength > 0) {
     Y.applyUpdate(entry.ydoc, existing);
   }
@@ -165,7 +202,7 @@ wss.on('connection', async (ws, req) => {
   }
 
   documentTokens.set(documentId, token);
-  
+
 
   const entry = getOrCreateDocEntry(documentId);
   entry.conns.add(ws);
@@ -173,43 +210,45 @@ wss.on('connection', async (ws, req) => {
   await ensureLoaded(documentId);
 
   ws.on('message', (data) => {
-    const message = new Uint8Array(data);
-    const decoder = decoding.createDecoder(message);
-    const messageType = decoding.readVarUint(decoder);
-    if (messageType === messageSync) {
-      const encoder = encoding.createEncoder();
-      encoding.writeVarUint(encoder, messageSync);
-      syncProtocol.readSyncMessage(decoder, encoder, entry.ydoc, ws);
-      const reply = encoding.toUint8Array(encoder);
-      if (reply.length > 1 && ws.readyState === ws.OPEN) {
-        try { ws.send(reply); } catch {}
+    try {
+      const msg = data instanceof Uint8Array ? data : new Uint8Array(data);
+      const dec = decoding.createDecoder(msg);
+      const type = decoding.readVarUint(dec);
+
+      switch (type) {
+        case MSG_SYNC:
+          handleSyncMessage(dec, ws, entry);
+          break;
+        case MSG_QUERY_AWARENESS:
+          handleQueryAwarenessMessage(ws, entry);
+          break;
+        case MSG_AWARENESS:
+          handleAwarenessMessage(dec, ws, entry);
+          break;
+        default:
+          break;
       }
-    } else if (messageType === messageQueryAwareness) {
-      const enc = encoding.createEncoder();
-      encoding.writeVarUint(enc, messageAwareness);
-      encoding.writeVarUint8Array(enc, awarenessProtocol.encodeAwarenessUpdate(
-        entry.awareness, Array.from(entry.awareness.getStates().keys())
-      ));
-      try { ws.send(encoding.toUint8Array(enc)); } catch {}
-    } else if (messageType === messageAwareness) {
-      const update = decoding.readVarUint8Array(decoder);
-      awarenessProtocol.applyAwarenessUpdate(entry.awareness, update, ws);
-    }
+    } catch (e) {}
   });
 
   ws.on('close', () => {
     const entry = documents.get(documentId);
+
     if (entry && entry.conns.size === 1) {
       const saveFunc = entry.saveFunc;
+
       if (saveFunc && typeof saveFunc.flush === 'function') {
         try { saveFunc.flush(); } catch {}
       }
     }
+
     if (entry) {
       const clientSet = entry.wsClients.get(ws) || new Set();
+
       if (clientSet.size > 0) {
         awarenessProtocol.removeAwarenessStates(entry.awareness, Array.from(clientSet), null);
       }
+
       entry.wsClients.delete(ws);
       entry.conns.delete(ws);
     }
