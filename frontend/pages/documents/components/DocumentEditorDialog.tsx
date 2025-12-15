@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import {TiptapEditor} from "@/pages/documents/components/TiptapEditor";
 import { ActiveCollaborators } from '@/pages/documents/components/ActiveCollaborators';
 import { authStorage } from '@/lib/auth';
+import { toast } from 'sonner';
 
 interface DocumentEditorDialogProps {
   documentId: string | null;
@@ -27,7 +28,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
   const [activeUsers, setActiveUsers] = useState<Array<{ name: string; color: string }>>([]);
-  const [editorKey, setEditorKey] = useState(0);
+  const [restoring, setRestoring] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const createVersion = useCreateVersion();
   const updateDocument = useUpdateDocument();
@@ -83,7 +84,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
   };
 
   const handleVersionRestored = () => {
-    setEditorKey(prev => prev + 1);
+    // Editor will resync after server reload; toast is triggered on sync.
   };
 
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -230,7 +231,19 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
           </DialogHeader>
 
           <div className={styles.editorWrapper}>
-            {open && <TiptapEditor key={editorKey} documentId={documentId} onActiveUsersChange={setActiveUsers} />}
+            {open && (
+              <TiptapEditor
+                documentId={documentId}
+                onActiveUsersChange={setActiveUsers}
+                loading={restoring}
+                onSynced={() => {
+                  if (restoring) {
+                    setRestoring(false);
+                    toast.success('Version restored');
+                  }
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -239,6 +252,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
             documentId={documentId}
             ownerUsername={document?.ownerUsername || ''}
             currentUsername={authStorage.getUsername() || undefined}
+            onRestoreStart={() => { setRestoring(true); setActiveUsers([]); }}
             onRestoreSuccess={handleVersionRestored}
           />
         </div>

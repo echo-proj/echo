@@ -8,10 +8,11 @@ interface ActiveCollaboratorsProps {
 export function ActiveCollaborators({ users }: ActiveCollaboratorsProps) {
   const [showPopover, setShowPopover] = useState(false);
   const maxVisible = 10;
-  const visibleUsers = users.slice(0, maxVisible);
-  const remainingCount = users.length - maxVisible;
+  const uniqueUsers = Array.from(new Map(users.map(u => [u.name + ":" + u.color, u])).values());
+  const visibleUsers = uniqueUsers.slice(0, maxVisible);
+  const remainingCount = Math.max(0, uniqueUsers.length - maxVisible);
 
-  if (users.length === 0) return null;
+  if (uniqueUsers.length === 0) return null;
 
   return (
     <div className={styles.container}>
@@ -35,9 +36,9 @@ export function ActiveCollaborators({ users }: ActiveCollaboratorsProps) {
             +{remainingCount}
             {showPopover && (
               <div className={styles.popover}>
-                <div className={styles.popoverHeader}>All Collaborators ({users.length})</div>
+                <div className={styles.popoverHeader}>All Collaborators ({uniqueUsers.length})</div>
                 <div className={styles.popoverContent}>
-                  {users.map((user, index) => (
+                  {uniqueUsers.map((user, index) => (
                     <div key={index} className={styles.popoverUser}>
                       <div
                         className={styles.popoverAvatar}

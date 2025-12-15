@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
@@ -10,6 +10,8 @@ import {authStorage} from '@/lib/auth';
 interface TiptapEditorProps {
   documentId: string;
   onActiveUsersChange?: (users: Array<{ name: string; color: string }>) => void;
+  loading?: boolean;
+  onSynced?: () => void;
 }
 
 interface AwarenessUserState {
@@ -31,10 +33,11 @@ function getUserColor(username: string): string {
   return `hsl(${hue}, 70%, 60%)`;
 }
 
-export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorProps) {
+export function TiptapEditor({ documentId, onActiveUsersChange, loading, onSynced }: TiptapEditorProps) {
   const [synced, setSynced] = useState(false);
+  const [sessionId, setSessionId] = useState(0);
 
-  const [{ ydoc, provider }] = useState(() => {
+  const { ydoc, provider } = useMemo(() => {
     const doc = new Y.Doc();
     const token = authStorage.getToken();
     const username = authStorage.getUsername() || 'Anonymous';
@@ -57,7 +60,7 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
     });
 
     return { ydoc: doc, provider: wsProvider };
-  });
+  }, [documentId, sessionId]);
 
   useEffect(() => {
     const updateUsers = () => {
@@ -87,14 +90,21 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
   useEffect(() => {
     const handleSync = (isSynced: boolean) => {
       if (isSynced) setSynced(true);
+      if (isSynced) onSynced?.();
     };
 
     provider.on('sync', handleSync);
+    const handleClose = () => {
+      setSynced(false);
+      setSessionId((v) => v + 1);
+    };
+    provider.on('connection-close', handleClose as any);
 
     return () => {
+      provider.off('connection-close', handleClose as any);
       provider?.destroy();
     };
-  }, [provider, ydoc]);
+  }, [provider]);
 
   const editor = useEditor({
     extensions: [
@@ -112,7 +122,7 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
       },
     },
     editable: synced,
-  }, [provider, synced]);
+  }, [provider, synced, ydoc]);
 
   if (!editor) {
     return <div className={styles.loading}>Loading editor...</div>;
@@ -124,6 +134,12 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
 
   return (
     <div className={styles.editorContainer}>
+      {loading && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.6)' }}>
+          <div className={styles.loading}>Restoring version…</div>
+        </div>
+      )}
+      
       <div className={styles.toolbar}>
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
