@@ -1,25 +1,36 @@
+function safeClose(ws, code, reason) {
+  try { ws.close(code, reason); } catch {}
+}
+
+function safeCancel(saveFunc) {
+  try { if (saveFunc && typeof saveFunc.cancel === 'function') saveFunc.cancel(); } catch {}
+}
+
+function safeDestroy(doc) {
+  try { doc && typeof doc.destroy === 'function' && doc.destroy(); } catch {}
+}
+
+function clearDocumentFromMemory(documents, documentId) {
+  const entry = documents.get(documentId);
+
+  if (!entry) return false;
+
+  const { ydoc, saveFunc, conns } = entry;
+  safeCancel(saveFunc);
+
+  if (conns && conns.size) {
+    for (const ws of conns) safeClose(ws, 1012, 'Server reload');
+  }
+
+  safeDestroy(ydoc);
+  documents.delete(documentId);
+  return true;
+}
+
 export function registerHttpEndpoints(app, { documents }) {
-  app.post('/reload-document/:documentId', async (req, res) => {
-    const { documentId } = req.params;
-    try {
-      const entry = documents.get(documentId);
-      if (entry) {
-        const { ydoc, saveFunc, conns } = entry;
-        if (saveFunc && saveFunc.cancel) {
-          try { saveFunc.cancel(); } catch {}
-        }
-        if (conns && conns.size > 0) {
-          for (const ws of conns) {
-            try { ws.close(1012, 'Server reload'); } catch {}
-          }
-        }
-        try { ydoc.destroy(); } catch {}
-        documents.delete(documentId);
-      }
-      res.status(200).json({ success: true, message: 'Document cleared, will reload on next connection' });
-    } catch (error) {
-      res.status(500).json({ success: false, error: error?.message || 'unknown error' });
-    }
+  app.post('/reload-document/:documentId', (req, res) => {
+    const ok = clearDocumentFromMemory(documents, req.params.documentId);
+    res.status(200).json({ success: true, cleared: ok });
   });
 
   app.get('/health', (_req, res) => {
