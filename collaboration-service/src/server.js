@@ -78,11 +78,10 @@ function createSaveFunction(documentId) {
   }, 2000);
 }
 
-registerHttpEndpoints(app, { documents, wsPort: WS_PORT });
+registerHttpEndpoints(app, { documents });
 
 const messageSync = 0;
 const messageAwareness = 1;
-const messageAuth = 2;
 const messageQueryAwareness = 3;
 
 function getOrCreateDocEntry(docName) {
@@ -152,8 +151,7 @@ wss.on('connection', async (ws, req) => {
   const parsed = url.parse(req.url, true);
   const { query, pathname } = parsed;
   const token = query.token;
-  const pathDoc = (pathname || '').replace(/^\/+/, '');
-  const documentId = pathDoc || query.documentId;
+  const documentId = (pathname || '').replace(/^\/+/, '');
 
   if (!token || !documentId) {
     ws.close(1008, 'Token and documentId are required');
@@ -167,7 +165,7 @@ wss.on('connection', async (ws, req) => {
   }
 
   documentTokens.set(documentId, token);
-  ws.documentId = documentId;
+  
 
   const entry = getOrCreateDocEntry(documentId);
   entry.conns.add(ws);
@@ -196,7 +194,6 @@ wss.on('connection', async (ws, req) => {
     } else if (messageType === messageAwareness) {
       const update = decoding.readVarUint8Array(decoder);
       awarenessProtocol.applyAwarenessUpdate(entry.awareness, update, ws);
-    } else if (messageType === messageAuth) {
     }
   });
 

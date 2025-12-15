@@ -1,4 +1,4 @@
-export function registerHttpEndpoints(app, { documents, wsPort }) {
+export function registerHttpEndpoints(app, { documents }) {
   app.post('/reload-document/:documentId', async (req, res) => {
     const { documentId } = req.params;
     try {
@@ -23,6 +23,6 @@ export function registerHttpEndpoints(app, { documents, wsPort }) {
   });
 
   app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', activeDocuments: documents.size, wsPort });
+    res.json({ status: 'ok', activeDocuments: documents.size });
   });
 }
