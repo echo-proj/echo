@@ -20,11 +20,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentVersionService {
 
   private static final int MAX_VERSIONS_PER_DOCUMENT = 15;
@@ -34,6 +38,10 @@ public class DocumentVersionService {
   private final DocumentContentRepository contentRepository;
   private final DocumentCollaboratorRepository collaboratorRepository;
   private final UserRepository userRepository;
+  private final RestTemplate restTemplate;
+
+  @Value("${collaboration.service.url:http://localhost:3001}")
+  private String collaborationServiceUrl;
 
   @Transactional
   public VersionResponse createVersion(UUID userId, UUID documentId, CreateVersionRequest request) {
@@ -153,6 +161,17 @@ public class DocumentVersionService {
 
     content.setState(version.getState());
     contentRepository.save(content);
+
+    // Notify collaboration service to reload the document from database
+    try {
+      String reloadUrl = collaborationServiceUrl + "/reload-document/" + documentId;
+      restTemplate.postForEntity(reloadUrl, null, Void.class);
+      log.info("Successfully notified collaboration service to reload document: {}", documentId);
+    } catch (Exception e) {
+      log.warn("Failed to notify collaboration service to reload document {}: {}", documentId, e.getMessage());
+      // Don't fail the restore operation if notification fails
+      // Version is already restored in DB, worst case users will need to refresh
+    }
   }
 
   @Transactional

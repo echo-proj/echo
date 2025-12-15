@@ -1,11 +1,10 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
 import * as Y from 'yjs';
 import {WebsocketProvider} from 'y-websocket';
 import styles from './TiptapEditor.module.scss';
-import {useDocumentContent, useSaveDocumentContent} from '@/hooks/useDocuments';
 import {authStorage} from '@/lib/auth';
 
 interface TiptapEditorProps {
@@ -34,11 +33,6 @@ function getUserColor(username: string): string {
 
 export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorProps) {
   const [synced, setSynced] = useState(false);
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const CLIENT_SAVE_DEBOUNCE_MS = 600;
-
-  const { data: contentData } = useDocumentContent(documentId);
-  const { mutate: saveContentMutate } = useSaveDocumentContent();
 
   const [{ ydoc, provider }] = useState(() => {
     const doc = new Y.Doc();
@@ -66,12 +60,6 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
   });
 
   useEffect(() => {
-    if (contentData && contentData.byteLength > 0 && synced) {
-      Y.applyUpdate(ydoc, contentData);
-    }
-  }, [contentData, synced, ydoc]);
-
-  useEffect(() => {
     const updateUsers = () => {
       const states = provider.awareness.getStates();
       const users: Array<{ name: string; color: string }> = [];
@@ -96,7 +84,6 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
     };
   }, [provider, onActiveUsersChange]);
 
-
   useEffect(() => {
     const handleSync = (isSynced: boolean) => {
       if (isSynced) setSynced(true);
@@ -104,31 +91,10 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
 
     provider.on('sync', handleSync);
 
-    const updateHandler = (_update: Uint8Array, origin: unknown) => {
-      if (origin === provider && !synced) {
-        setSynced(true);
-      }
-
-      if (origin !== provider) {
-        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => {
-          const state = Y.encodeStateAsUpdate(ydoc);
-          saveContentMutate({ documentId, content: state });
-        }, CLIENT_SAVE_DEBOUNCE_MS);
-      }
-    };
-
-    ydoc.on('update', updateHandler);
-
     return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      const state = Y.encodeStateAsUpdate(ydoc);
-      saveContentMutate({ documentId, content: state });
-
-      ydoc.off('update', updateHandler);
       provider?.destroy();
     };
-  }, [documentId, ydoc, provider]);
+  }, [provider, ydoc]);
 
   const editor = useEditor({
     extensions: [
@@ -137,7 +103,7 @@ export function TiptapEditor({ documentId, onActiveUsersChange }: TiptapEditorPr
       }),
       Collaboration.configure({
         document: ydoc,
-        field: 'default',
+        field: 'prosemirror',
       }),
     ],
     editorProps: {

@@ -20,9 +20,10 @@ interface VersionHistoryProps {
   documentId: string;
   ownerUsername: string;
   currentUsername?: string;
+  onRestoreSuccess?: () => void;
 }
 
-export function VersionHistory({ documentId, ownerUsername, currentUsername }: VersionHistoryProps) {
+export function VersionHistory({ documentId, ownerUsername, currentUsername, onRestoreSuccess }: VersionHistoryProps) {
   const { data: versions, isLoading } = useDocumentVersions(documentId);
   const restoreVersion = useRestoreVersion();
   const deleteVersion = useDeleteVersion();
@@ -31,7 +32,14 @@ export function VersionHistory({ documentId, ownerUsername, currentUsername }: V
 
   const handleRestore = (versionId: string) => {
     if (confirm('Are you sure you want to restore this version? Current content will be replaced.')) {
-      restoreVersion.mutate({ documentId, versionId });
+      restoreVersion.mutate(
+        { documentId, versionId },
+        {
+          onSuccess: () => {
+            onRestoreSuccess?.();
+          }
+        }
+      );
     }
   };
 
