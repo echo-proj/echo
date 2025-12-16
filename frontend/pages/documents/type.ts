@@ -43,3 +43,8 @@ export default DocumentVersion
 export interface CreateVersionRequest {
     label?: string;
 }
+
+export type UserState = { name: string; color: string };
+export type RestoringState = { active: boolean; ts: number };
+export type AwarenessState = { user?: UserState; restoring?: RestoringState };
+export type ConnectionStatus = { status: 'connected' | 'connecting' | 'disconnected' };

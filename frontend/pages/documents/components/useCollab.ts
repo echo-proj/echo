@@ -2,13 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { authStorage } from '@/lib/auth';
+import {AwarenessState, ConnectionStatus, UserState} from "@/pages/documents/type";
 
 const COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
-
-type UserState = { name: string; color: string };
-type RestoringState = { active: boolean; ts: number };
-type AwarenessState = { user?: UserState; restoring?: RestoringState };
-type ConnectionStatus = { status: 'connected' | 'connecting' | 'disconnected' };
 
 function getUserColor(username: string) {
   let hash = 0;
