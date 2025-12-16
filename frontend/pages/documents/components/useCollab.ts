@@ -2,9 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { authStorage } from '@/lib/auth';
-import {AwarenessState, ConnectionStatus, UserState} from "@/pages/documents/type";
-
-const COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
+import { AwarenessState, ConnectionStatus, UserState } from '@/pages/documents/type';
+import { COLLABORATION_WS_URL } from '@/lib/env';
 
 function getUserColor(username: string) {
   let hash = 0;

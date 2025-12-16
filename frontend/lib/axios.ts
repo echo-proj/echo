@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { authStorage } from './auth';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { API_BASE_URL } from '@/lib/env';
 
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
