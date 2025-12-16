@@ -42,7 +42,7 @@ public class DocumentVersionService {
   private final UserRepository userRepository;
   private final RestTemplate restTemplate;
 
-  @Value("${collaboration.service.url:http://localhost:3001}")
+  @Value("${collaboration.service.url}")
   private String collaborationServiceUrl;
 
   @Transactional
