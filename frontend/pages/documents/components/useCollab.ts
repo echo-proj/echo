@@ -22,6 +22,7 @@ export function useCollab(documentId: string, sessionId: number) {
   const [provider, setProvider] = useState<WebsocketProvider | null>(null);
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
   const [synced, setSynced] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [activeUsers, setActiveUsers] = useState<UserState[]>([]);
   const [isRemoteRestoring, setIsRemoteRestoring] = useState(false);
 
@@ -59,14 +60,31 @@ export function useCollab(documentId: string, sessionId: number) {
 
     const handleSync = (isSynced: boolean) => {
       setSynced(isSynced);
+      if (isSynced) {
+        try {
+          const current = (wsProvider.awareness.getLocalState() || {}) as AwarenessState;
+          if (current.restoring) {
+            const { restoring, ...rest } = current;
+            wsProvider.awareness.setLocalState(rest as AwarenessState);
+          }
+        } catch {}
+      }
     };
 
     const handleStatus = (event: ConnectionStatus) => {
-      if (event.status === 'disconnected') setSynced(false);
+      if (event.status === 'connected') {
+        setConnected(true);
+      } else if (event.status === 'connecting') {
+        setConnected(false);
+      } else {
+        setConnected(false);
+        setSynced(false);
+      }
     };
 
     wsProvider.on('sync', handleSync);
     wsProvider.on('status', handleStatus);
+    wsProvider.on('connection-close', () => { setConnected(false); setSynced(false); });
     wsProvider.awareness.on('change', handleAwarenessUpdate);
 
     const init = window.setTimeout(handleAwarenessUpdate, 0);
@@ -84,6 +102,5 @@ export function useCollab(documentId: string, sessionId: number) {
     };
   }, [documentId, sessionId, auth.token, auth.username]);
 
-  return { provider, ydoc, synced, activeUsers, isRemoteRestoring };
+  return { provider, ydoc, synced, connected, activeUsers, isRemoteRestoring };
 }
-

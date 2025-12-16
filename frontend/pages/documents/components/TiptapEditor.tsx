@@ -22,7 +22,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
   ref
 ) {
   const [sessionId, setSessionId] = useState(0);
-  const { provider, ydoc, synced, activeUsers, isRemoteRestoring } = useCollab(documentId, sessionId);
+  const { provider, ydoc, synced, connected, activeUsers, isRemoteRestoring } = useCollab(documentId, sessionId);
 
   useEffect(() => {
     onActiveUsersChange?.(activeUsers);
@@ -35,7 +35,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
       ...(ydoc ? [Collaboration.configure({ document: ydoc, field: 'prosemirror' })] : []),
     ],
     editorProps: { attributes: { class: styles.editor } },
-  }, [ydoc, synced, isRemoteRestoring]);
+  }, [ydoc]);
 
   useImperativeHandle(ref, () => ({
     startRestore: () => {
@@ -45,8 +45,15 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
     },
   }));
 
-  const unstable = !synced || !editor || isRemoteRestoring;
+  const unstable = !connected || !editor;
   const showOverlay = useSmoothLoading(unstable, 350);
+
+  useEffect(() => {
+    if (!provider) return;
+    const reset = () => setSessionId((v) => v + 1);
+    provider.on('connection-close', reset);
+    return () => { try { provider.off('connection-close', reset); } catch {} };
+  }, [provider]);
 
   return (
     <div className={styles.editorContainer}>
@@ -65,4 +72,3 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
     </div>
   );
 });
-
