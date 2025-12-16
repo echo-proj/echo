@@ -29,12 +29,14 @@ interface VersionHistoryProps {
     documentId: string;
     ownerUsername: string;
     currentUsername?: string;
+    onBeginRestore?: () => void;
 }
 
 export function VersionHistory({
                                    documentId,
                                    ownerUsername,
-                                   currentUsername
+                                   currentUsername,
+                                   onBeginRestore
                                }: VersionHistoryProps) {
     const {data: versions, isLoading} = useDocumentVersions(documentId);
     const restoreVersion = useRestoreVersion();
@@ -52,10 +54,13 @@ export function VersionHistory({
     const confirmRestore = () => {
         if (!pendingVersionId) return;
         restoreVersion.mutate(
-            {documentId, versionId: pendingVersionId},
+            { documentId, versionId: pendingVersionId },
             {
-                onSuccess: () => toast.success('Version restored'),
-                onError: () => toast.error('Failed to restore version')
+                onSuccess: () => {
+                    onBeginRestore?.();
+                    toast.success('Version restored');
+                },
+                onError: () => toast.error('Failed to restore version'),
             }
         );
         setConfirmOpen(false);

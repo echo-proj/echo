@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {TiptapEditor} from "@/pages/documents/components/TiptapEditor";
+import {TiptapEditor, type TiptapEditorHandle} from "@/pages/documents/components/TiptapEditor";
 import { ActiveCollaborators } from '@/pages/documents/components/ActiveCollaborators';
 import { authStorage } from '@/lib/auth';
 
@@ -27,6 +27,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
   const [activeUsers, setActiveUsers] = useState<Array<{ name: string; color: string }>>([]);
+  const editorRef = useRef<TiptapEditorHandle | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const createVersion = useCreateVersion();
   const updateDocument = useUpdateDocument();
@@ -225,7 +226,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
           </DialogHeader>
 
           <div className={styles.editorWrapper}>
-            {open && <TiptapEditor documentId={documentId} onActiveUsersChange={setActiveUsers} />}
+            {open && <TiptapEditor ref={editorRef} documentId={documentId} onActiveUsersChange={setActiveUsers} />}
           </div>
         </div>
 
@@ -234,6 +235,7 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
             documentId={documentId}
             ownerUsername={document?.ownerUsername || ''}
             currentUsername={authStorage.getUsername() || undefined}
+            onBeginRestore={() => editorRef.current?.startRestore()}
           />
         </div>
 
