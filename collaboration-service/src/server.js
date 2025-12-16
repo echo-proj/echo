@@ -207,7 +207,6 @@ wss.on('connection', async (ws, req) => {
   const entry = getOrCreateDocEntry(documentId);
   entry.conns.add(ws);
   entry.wsClients.set(ws, new Set());
-  await ensureLoaded(documentId);
 
   ws.on('message', (data) => {
     try {
@@ -253,6 +252,9 @@ wss.on('connection', async (ws, req) => {
       entry.conns.delete(ws);
     }
   });
+
+  handleQueryAwarenessMessage(ws, entry);
+  await ensureLoaded(documentId);
 });
 
 server.listen(WS_PORT);
