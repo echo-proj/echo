@@ -97,7 +97,7 @@ export default function Documents() {
               </p>
             </div>
             <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
-              Create Document
+              Create Documenta
             </Button>
           </div>
 
