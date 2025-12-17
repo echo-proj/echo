@@ -10,9 +10,34 @@ env:
   GCP_REGION: us-central1
 
 jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      collab: ${{ steps.filter.outputs.collab }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            collab:
+              - 'collaboration-service/**'
+            frontend:
+              - 'frontend/**'
+
   deploy-backend:
     name: Deploy Spring Backend
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
 
     steps:
       - name: Checkout code
@@ -43,7 +68,8 @@ jobs:
   deploy-collab:
     name: Deploy Collaboration Service
     runs-on: ubuntu-latest
-    needs: deploy-backend
+    needs: detect-changes
+    if: needs.detect-changes.outputs.collab == 'true'
 
     steps:
       - name: Checkout code
@@ -74,7 +100,8 @@ jobs:
   deploy-frontend:
     name: Deploy Next.js Frontend
     runs-on: ubuntu-latest
-    needs: [deploy-backend, deploy-collab]
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
 
     steps:
       - name: Checkout code
