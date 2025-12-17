@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
-import { CollaboratorSlidePanel } from '@/pages/documents/components/CollaboratorSlidePanel';
-import { VersionHistory } from '@/pages/documents/components/VersionHistory';
+import { CollaboratorSlidePanel } from '@/components/custom/documents/CollaboratorSlidePanel';
+import { VersionHistory } from '@/components/custom/documents/VersionHistory';
 import { useDocument, useCreateVersion, useUpdateDocument } from '@/hooks/useDocuments';
 import { Loader2, FileText, User, Calendar, Users, Save, Check, X } from 'lucide-react';
 import styles from './DocumentEditorDialog.module.scss';
@@ -9,8 +9,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {TiptapEditor, type TiptapEditorHandle} from "@/pages/documents/components/TiptapEditor";
-import { ActiveCollaborators } from '@/pages/documents/components/ActiveCollaborators';
+import {TiptapEditor, type TiptapEditorHandle} from "@/components/custom/documents/TiptapEditor";
+import { ActiveCollaborators } from '@/components/custom/documents/ActiveCollaborators';
 import { authStorage } from '@/lib/auth';
 
 interface DocumentEditorDialogProps {

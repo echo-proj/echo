@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useSearchUsers, useAddCollaborator, useRemoveCollaborator } from '@/hooks/useUsers';
-import { Collaborator, UserSearchResult } from '@/pages/documents/type';
+import { Collaborator, UserSearchResult } from '@/domain/documents/type';
 import { UserPlus, Search, Loader2, UserMinus, Users, AlertCircle } from 'lucide-react';
 import { getErrorMessage } from "@/lib/utils";
 

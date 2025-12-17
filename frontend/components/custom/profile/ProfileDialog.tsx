@@ -10,7 +10,7 @@ import { getErrorMessage, getValidationErrors } from '@/lib/utils';
 import { Loader2, User, Mail } from 'lucide-react';
 import { useEffect } from 'react';
 import styles from './ProfileDialog.module.scss';
-import {UpdateProfileFormData, updateProfileSchema} from "@/pages/profile/validations";
+import {UpdateProfileFormData, updateProfileSchema} from "@/domain/profile/validations";
 
 interface ProfileDialogProps {
   open: boolean;

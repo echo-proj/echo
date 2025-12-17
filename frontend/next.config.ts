@@ -8,6 +8,7 @@ for (const key of requiredEnv) {
 }
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL as string,
     NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL as string,

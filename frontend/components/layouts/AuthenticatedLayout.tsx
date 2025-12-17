@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useProfile } from '@/hooks/useUsers';
-import { ProfileDialog } from '@/pages/profile/ProfileDialog';
+import { ProfileDialog } from '@/components/custom/profile/ProfileDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

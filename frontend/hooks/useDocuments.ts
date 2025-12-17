@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { documentsApi } from '@/lib/api/documents';
-import { CreateDocumentRequest, CreateVersionRequest } from "@/pages/documents/type";
+import { CreateDocumentRequest, CreateVersionRequest } from "@/domain/documents/type";
 
 export const useDocuments = () => {
   return useQuery({

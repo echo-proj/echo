@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRegister } from '@/hooks/useAuth';
 import { getErrorMessage, getValidationErrors } from '@/lib/utils';
 import styles from './Register.module.scss';
-import {RegisterFormData, registerSchema} from "@/pages/register/validations";
+import {RegisterFormData, registerSchema} from "@/domain/register/validations";
 import {AlertCircleIcon} from "lucide-react";
 
 export default function Register() {

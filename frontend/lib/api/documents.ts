@@ -1,5 +1,5 @@
 import { axiosInstance } from '../axios';
-import DocumentVersion, {AddCollaboratorRequest, CreateDocumentRequest, CreateVersionRequest, Document, UserSearchResult} from "@/pages/documents/type";
+import DocumentVersion, {AddCollaboratorRequest, CreateDocumentRequest, CreateVersionRequest, Document, UserSearchResult} from "@/domain/documents/type";
 
 export const documentsApi = {
   getAll: async (): Promise<Document[]> => {

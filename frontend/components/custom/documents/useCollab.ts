@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { authStorage } from '@/lib/auth';
-import { AwarenessState, ConnectionStatus, UserState } from '@/pages/documents/type';
+import { AwarenessState, ConnectionStatus, UserState } from '@/domain/documents/type';
 import { COLLABORATION_WS_URL } from '@/lib/env';
 
 function getUserColor(username: string) {

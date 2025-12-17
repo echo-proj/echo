@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCreateDocument } from '@/hooks/useDocuments';
 import { getErrorMessage, getValidationErrors } from '@/lib/utils';
-import {CreateDocumentFormData, createDocumentSchema} from "@/pages/documents/validations";
+import {CreateDocumentFormData, createDocumentSchema} from "@/domain/documents/validations";
 
 interface CreateDocumentDialogProps {
   open: boolean;

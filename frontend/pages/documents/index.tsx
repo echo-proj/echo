@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreateDocumentDialog } from '@/pages/documents/components/CreateDocumentDialog';
-import { DocumentEditorDialog } from '@/pages/documents/components/DocumentEditorDialog';
+import { CreateDocumentDialog } from '@/components/custom/documents/CreateDocumentDialog';
+import { DocumentEditorDialog } from '@/components/custom/documents/DocumentEditorDialog';
 import { AuthenticatedLayout } from '@/components/layouts/AuthenticatedLayout';
 import { useDocuments } from '@/hooks/useDocuments';
 import styles from './Documents.module.scss';

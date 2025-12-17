@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLogin } from '@/hooks/useAuth';
 import { getErrorMessage, getValidationErrors } from '@/lib/utils';
 import styles from './Login.module.scss';
-import {LoginFormData, loginSchema} from "@/pages/login/validations";
+import {LoginFormData, loginSchema} from "@/domain/login/validations";
 
 export default function Login() {
   const loginMutation = useLogin();

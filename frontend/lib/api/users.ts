@@ -1,6 +1,6 @@
 import { axiosInstance } from '../axios';
-import { UserSearchResult } from '@/pages/documents/type';
-import {UpdateProfileRequest, UserProfile} from "@/pages/profile/types";
+import { UserSearchResult } from '@/domain/documents/type';
+import {UpdateProfileRequest, UserProfile} from "@/domain/profile/types";
 
 export const usersApi = {
   search: async (query: string): Promise<UserSearchResult[]> => {

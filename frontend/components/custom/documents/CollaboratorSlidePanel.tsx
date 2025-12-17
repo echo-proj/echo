@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useSearchAvailableCollaborators } from '@/hooks/useDocuments';
 import { useAddCollaborator, useRemoveCollaborator } from '@/hooks/useUsers';
-import { Collaborator, UserSearchResult } from '@/pages/documents/type';
+import { Collaborator, UserSearchResult } from '@/domain/documents/type';
 import { UserPlus, Search, Loader2, UserMinus, Users, AlertCircle, X } from 'lucide-react';
 import { getErrorMessage } from "@/lib/utils";
 import styles from './CollaboratorSlidePanel.module.scss';
