@@ -29,13 +29,18 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
   }, [activeUsers, onActiveUsersChange]);
 
   const editor = useEditor({
-    editable: synced && !isRemoteRestoring,
+    editable: false,
     extensions: [
       StarterKit.configure({ history: false }),
       ...(ydoc ? [Collaboration.configure({ document: ydoc, field: 'prosemirror' })] : []),
     ],
     editorProps: { attributes: { class: styles.editor } },
   }, [ydoc]);
+
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(synced && !isRemoteRestoring);
+  }, [editor, synced, isRemoteRestoring]);
 
   useImperativeHandle(ref, () => ({
     startRestore: () => {
