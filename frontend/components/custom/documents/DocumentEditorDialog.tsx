@@ -172,8 +172,8 @@ export function DocumentEditorDialog({ documentId, open, onOpenChange }: Documen
                             version later.
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
+                        <div className="space-y-6">
+                          <div className="grid gap-2">
                             <Label htmlFor="version-label">Label (optional)</Label>
                             <Input
                               id="version-label"
