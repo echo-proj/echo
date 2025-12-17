@@ -44,9 +44,14 @@ export function useCollab(documentId: string, sessionId: number) {
       const users: UserState[] = [];
       let restoringFound = false;
 
+      const now = Date.now();
       states.forEach((state) => {
         if (state?.user) users.push(state.user);
-        if (state?.restoring?.active) restoringFound = true;
+        const r = state?.restoring as any;
+        if (r?.active) {
+          const fresh = typeof r.ts === 'number' ? (now - r.ts) < 30000 : true;
+          if (fresh) restoringFound = true;
+        }
       });
 
       setActiveUsers(users);

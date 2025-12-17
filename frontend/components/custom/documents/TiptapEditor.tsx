@@ -60,6 +60,14 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
     return () => { try { provider.off('connection-close', reset); } catch {} };
   }, [provider]);
 
+  useEffect(() => {
+    if (!editor) return;
+    if (connected && !synced) {
+      const t = window.setTimeout(() => setSessionId((v) => v + 1), 6000);
+      return () => window.clearTimeout(t);
+    }
+  }, [connected, synced, editor]);
+
   return (
     <div className={styles.editorContainer}>
       {showOverlay && (
