@@ -50,8 +50,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
     },
   }));
 
-  const unstable = !connected || !editor;
-  const showOverlay = useSmoothLoading(unstable, 350);
+  const blocked = !connected || !editor || !synced || isRemoteRestoring;
+  const showOverlay = useSmoothLoading(blocked, 350);
 
   useEffect(() => {
     if (!provider) return;
