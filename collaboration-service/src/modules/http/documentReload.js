@@ -1,13 +1,19 @@
 function safeClose(ws, code, reason) {
-  try { ws.close(code, reason); } catch {}
+  try {
+    ws.close(code, reason);
+  } catch {}
 }
 
 function safeCancel(saveFunc) {
-  try { if (saveFunc && typeof saveFunc.cancel === 'function') saveFunc.cancel(); } catch {}
+  try {
+    if (saveFunc && typeof saveFunc.cancel === 'function') saveFunc.cancel();
+  } catch {}
 }
 
 function safeDestroy(doc) {
-  try { doc && typeof doc.destroy === 'function' && doc.destroy(); } catch {}
+  try {
+    doc && typeof doc.destroy === 'function' && doc.destroy();
+  } catch {}
 }
 
 function clearDocumentFromMemory(documents, documentId) {
@@ -27,13 +33,9 @@ function clearDocumentFromMemory(documents, documentId) {
   return true;
 }
 
-export function registerHttpEndpoints(app, { documents }) {
+export function registerDocumentReloadEndpoint(app, documents) {
   app.post('/reload-document/:documentId', (req, res) => {
     const ok = clearDocumentFromMemory(documents, req.params.documentId);
     res.status(200).json({ success: true, cleared: ok });
-  });
-
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', activeDocuments: documents.size });
   });
 }

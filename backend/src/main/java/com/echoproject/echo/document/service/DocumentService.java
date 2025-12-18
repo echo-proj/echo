@@ -16,6 +16,9 @@ import com.echoproject.echo.document.models.DocumentContent;
 import com.echoproject.echo.document.repository.DocumentCollaboratorRepository;
 import com.echoproject.echo.document.repository.DocumentContentRepository;
 import com.echoproject.echo.document.repository.DocumentRepository;
+import com.echoproject.echo.notification.client.CollaborationServiceClient;
+import com.echoproject.echo.notification.models.NotificationType;
+import com.echoproject.echo.notification.service.NotificationService;
 import com.echoproject.echo.user.dto.UserSearchResponse;
 import com.echoproject.echo.user.models.User;
 import com.echoproject.echo.user.models.UserProfile;
@@ -37,6 +40,8 @@ public class DocumentService {
   private final DocumentCollaboratorRepository collaboratorRepository;
   private final DocumentContentRepository contentRepository;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
+  private final CollaborationServiceClient collaborationServiceClient;
 
   @Transactional
   public DocumentResponse createDocument(UUID userId, CreateDocumentRequest request) {
@@ -141,6 +146,11 @@ public class DocumentService {
 
     DocumentCollaborator documentCollaborator = new DocumentCollaborator(document, collaborator);
     collaboratorRepository.save(documentCollaborator);
+
+    notificationService.createNotification(
+        collaborator.getId(), NotificationType.COLLABORATOR_ADDED, documentId, userId);
+
+    collaborationServiceClient.broadcastDocumentUpdate(List.of(collaborator.getId()), documentId);
   }
 
   @Transactional
@@ -162,6 +172,14 @@ public class DocumentService {
     if (!DocumentAccessControl.isCollaborator(collaboratorUserId, existingCollaboratorIds)) {
       throw new NotFoundException("Collaborator not found");
     }
+
+    // Create notification for the removed collaborator
+    notificationService.createNotification(
+        collaboratorUserId, NotificationType.COLLABORATOR_REMOVED, documentId, userId);
+
+    // Broadcast real-time update to the removed collaborator
+    collaborationServiceClient.broadcastDocumentUpdate(
+        List.of(collaboratorUserId), documentId);
 
     collaboratorRepository.deleteByDocumentIdAndUserId(documentId, collaboratorUserId);
   }

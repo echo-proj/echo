@@ -2,6 +2,8 @@ import { ReactNode, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useProfile } from '@/hooks/useUsers';
 import { ProfileDialog } from '@/components/custom/profile/ProfileDialog';
+import { NotificationBell } from '@/components/custom/notifications/NotificationBell';
+import { useNotificationWebSocket } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,6 +28,9 @@ export function AuthenticatedLayout({
   const { data: profile } = useProfile();
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Connect to notification WebSocket for real-time updates
+  useNotificationWebSocket();
 
   const handleLogout = () => {
     authStorage.clearAuth();
@@ -75,6 +80,8 @@ export function AuthenticatedLayout({
           </div>
 
           <div className={styles.rightSection}>
+            <NotificationBell />
+
             <button
               className={styles.profileButton}
               onClick={() => setProfileDialogOpen(true)}
