@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { notificationsApi } from '@/lib/api/notifications';
 import { authStorage } from '@/lib/auth';
 import { COLLABORATION_WS_URL } from '@/lib/env';
+import { toast } from 'sonner';
 
 export const useNotifications = () => {
   return useQuery({
@@ -54,25 +55,30 @@ export const useDeleteNotification = () => {
   });
 };
 
+let globalWs: WebSocket | null = null;
+let globalConnecting = false;
+let lastDocUpdateToastAt = 0;
+
 export const useNotificationWebSocket = () => {
   const queryClient = useQueryClient();
-  const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const token = authStorage.getToken();
+    if (!token) return;
 
-    if (!token) {
-      return;
-    }
+    if (globalWs || globalConnecting) return;
 
     const connect = () => {
+      if (globalWs || globalConnecting) return;
+      globalConnecting = true;
       const wsUrl = `${COLLABORATION_WS_URL}/notifications?token=${token}`;
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         setIsConnected(true);
+        globalConnecting = false;
       };
 
       ws.onmessage = (event) => {
@@ -83,6 +89,13 @@ export const useNotificationWebSocket = () => {
             queryClient.invalidateQueries({ queryKey: ['documents'] });
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
             queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
+            const now = Date.now();
+            if (now - lastDocUpdateToastAt > 1500) {
+              toast.info('New notification', {
+                description: 'Your shared documents were updated.',
+              });
+              lastDocUpdateToastAt = now;
+            }
           }
         } catch (e) {
           console.error('[WS] Failed to parse notification message:', e);
@@ -91,14 +104,14 @@ export const useNotificationWebSocket = () => {
 
       ws.onclose = (_) => {
         setIsConnected(false);
-        wsRef.current = null;
+        if (globalWs === ws) globalWs = null;
 
         reconnectTimeoutRef.current = setTimeout(() => {
           connect();
         }, 3000);
       };
 
-      wsRef.current = ws;
+      globalWs = ws;
     };
 
     connect();
@@ -106,11 +119,6 @@ export const useNotificationWebSocket = () => {
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
-      }
-
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
       }
     };
   }, [queryClient]);
