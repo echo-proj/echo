@@ -9,14 +9,12 @@ dayjs.extend(relativeTime);
 
 interface NotificationItemProps {
   notification: Notification;
-  onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
-  onNavigate?: (documentId: string) => void;
+  onNavigate?: () => void;
 }
 
 export function NotificationItem({
   notification,
-  onMarkAsRead,
   onDelete,
   onNavigate,
 }: NotificationItemProps) {
@@ -43,11 +41,8 @@ export function NotificationItem({
   };
 
   const handleClick = () => {
-    if (!notification.read) {
-      onMarkAsRead(notification.id);
-    }
     if (onNavigate) {
-      onNavigate(notification.documentId);
+      onNavigate();
     }
   };
 

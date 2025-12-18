@@ -3,18 +3,23 @@ import { NotificationItem } from './NotificationItem';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCheck, Inbox } from 'lucide-react';
-import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { DocumentEditorDialog } from '@/components/custom/documents/DocumentEditorDialog';
+import { documentsApi } from '@/lib/api/documents';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import type { Notification } from '@/domain/notifications/type';
 
 export function NotificationDropdown() {
-  const router = useRouter();
   const { data: notifications = [], isLoading } = useNotifications();
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
-
-  const handleMarkAsRead = (id: string) => {
-    markAsReadMutation.mutate(id);
-  };
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [infoTitle, setInfoTitle] = useState<string>('');
+  const [infoDescription, setInfoDescription] = useState<string>('');
+  const [activeNotificationId, setActiveNotificationId] = useState<string | null>(null);
 
   const handleMarkAllAsRead = () => {
     markAllAsReadMutation.mutate();
@@ -24,8 +29,35 @@ export function NotificationDropdown() {
     deleteNotificationMutation.mutate(id);
   };
 
-  const handleNavigate = (documentId: string) => {
-    router.push(`/documents?id=${documentId}`);
+  const handleOpenNotification = async (notification: Notification) => {
+    setActiveNotificationId(notification.id);
+
+    // If collaborator removed, show info and offer actions.
+    if (notification.type === 'COLLABORATOR_REMOVED') {
+      setInfoTitle('Access Removed');
+      setInfoDescription('You no longer have access to this document.');
+      setInfoOpen(true);
+      return;
+    }
+
+    try {
+      await documentsApi.getById(notification.documentId);
+      setSelectedDocumentId(notification.documentId);
+      setIsDialogOpen(true);
+    } catch (e: any) {
+      const status = e?.response?.status;
+      if (status === 404) {
+        setInfoTitle('Document Not Found');
+        setInfoDescription('This document was deleted or no longer exists.');
+      } else if (status === 403) {
+        setInfoTitle('Access Denied');
+        setInfoDescription('You no longer have permission to view this document.');
+      } else {
+        setInfoTitle('Unable to Open');
+        setInfoDescription('We could not open this document. Please try again later.');
+      }
+      setInfoOpen(true);
+    }
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -74,29 +106,58 @@ export function NotificationDropdown() {
               <NotificationItem
                 key={notification.id}
                 notification={notification}
-                onMarkAsRead={handleMarkAsRead}
                 onDelete={handleDelete}
-                onNavigate={handleNavigate}
+                onNavigate={() => handleOpenNotification(notification)}
               />
             ))}
           </div>
         )}
       </div>
 
-      {notifications.length > 0 && (
-        <div className="p-3 border-t text-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full"
-            onClick={() => {
-              router.push('/notifications');
-            }}
-          >
-            View all notifications
-          </Button>
-        </div>
-      )}
+      <DocumentEditorDialog
+        documentId={selectedDocumentId}
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setSelectedDocumentId(null);
+        }}
+      />
+
+      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{infoTitle}</DialogTitle>
+            <DialogDescription>{infoDescription}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            {activeNotificationId && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    markAsReadMutation.mutate(activeNotificationId);
+                    setInfoOpen(false);
+                  }}
+                  disabled={markAsReadMutation.isPending}
+                >
+                  Mark as read
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    deleteNotificationMutation.mutate(activeNotificationId);
+                    setInfoOpen(false);
+                  }}
+                  disabled={deleteNotificationMutation.isPending}
+                >
+                  Delete notification
+                </Button>
+              </>
+            )}
+            <Button onClick={() => setInfoOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
