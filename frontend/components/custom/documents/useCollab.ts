@@ -22,9 +22,11 @@ export function useCollab(documentId: string, sessionId: number) {
   const [isRemoteRestoring, setIsRemoteRestoring] = useState(false);
 
   const auth = useMemo(() => {
+    const rawUsername = authStorage.getUsername();
+    const username = rawUsername && rawUsername !== 'undefined' ? rawUsername : 'Anonymous';
     return {
       token: authStorage.getToken() || '',
-      username: authStorage.getUsername() || 'Anonymous',
+      username,
     };
   }, [documentId, sessionId]);
 
@@ -46,7 +48,11 @@ export function useCollab(documentId: string, sessionId: number) {
 
       const now = Date.now();
       states.forEach((state) => {
-        if (state?.user) users.push(state.user);
+        if (state?.user) {
+          const raw = state.user;
+          const safeName = raw.name && raw.name !== 'undefined' ? raw.name : 'Anonymous';
+          users.push({ name: safeName, color: raw.color });
+        }
         const r = state?.restoring as any;
         if (r?.active) {
           const fresh = typeof r.ts === 'number' ? (now - r.ts) < 30000 : true;

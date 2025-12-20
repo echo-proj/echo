@@ -1,22 +1,21 @@
 name: Deploy to Cloud Run
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 env:
   GCP_PROJECT_ID: echo-project-481417
   GCP_REGION: us-central1
 
-jobs:
-  detect-changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      collab: ${{ steps.filter.outputs.collab }}
-      frontend: ${{ steps.filter.outputs.frontend }}
+  jobs:
+    detect-changes:
+      name: Detect Changes
+      runs-on: ubuntu-latest
+      if: false
+      outputs:
+        backend: ${{ steps.filter.outputs.backend }}
+        collab: ${{ steps.filter.outputs.collab }}
+        frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,7 +36,7 @@ jobs:
     name: Deploy Spring Backend
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.backend == 'true'
+    if: false
 
     steps:
       - name: Checkout code
@@ -69,7 +68,7 @@ jobs:
     name: Deploy Collaboration Service
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.collab == 'true'
+    if: false
 
     steps:
       - name: Checkout code
@@ -101,7 +100,7 @@ jobs:
     name: Deploy Next.js Frontend
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true'
+    if: false
 
     steps:
       - name: Checkout code

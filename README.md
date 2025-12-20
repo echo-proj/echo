@@ -12,12 +12,18 @@ Real-time collaborative text editing with versioning.
 - Deployable by design: separated services, Docker Compose, and strict env-driven config.
 
 ## Repo Structure
-- `backend/`: Spring Boot (JWT auth, Postgres, Liquibase)
+- `gateway/`: Spring Cloud Gateway (routes to services)
+- `user-service/`: Spring Boot (JWT auth, profiles, Liquibase)
+- `document-service/`: Spring Boot (documents CRUD, collaborators, content)
+- `version-service/`: Spring Boot (versions list/create/restore/delete)
 - `collaboration-service/`: Node + Express + ws + Yjs (awareness, syncing)
 - `frontend/`: Next.js + Tiptap (Yjs Collaboration)
 
 ## Default Ports
-- API: `http://localhost:8080`
+- API Gateway: `http://localhost:8080`
+- User Service: `http://user-service:8081` (internal)
+- Document Service: `http://document-service:8082` (internal)
+- Version Service: `http://version-service:8083` (internal)
 - Collab WS: `ws://localhost:3001`
 - Frontend: `http://localhost:3000`
 - Postgres: `localhost:5433`
@@ -42,7 +48,7 @@ Frontend env is validated in `next.config.ts` (no fallbacks). Backend reads valu
 ## Quick Start
 Prereqs: Java 17, Docker, Docker Compose, Node 18+.
 
-1) Start DB + backend + collaboration service
+1) Start DB + microservices + collaboration service
 ```bash
 docker compose up -d
 ```
@@ -55,12 +61,13 @@ npm install
 npm run dev
 ```
 
-API: `http://localhost:8080` • Frontend: `http://localhost:3000`
+API Gateway: `http://localhost:8080` • Frontend: `http://localhost:3000`
 
 ## Run Services Individually
-- Backend (in `backend/`)
-  - Set env vars (see above)
-  - `./mvnw spring-boot:run`
+- Gateway (in `gateway/`): `mvn spring-boot:run`
+- User Service (in `user-service/`): `mvn spring-boot:run`
+- Document Service (in `document-service/`): `mvn spring-boot:run`
+- Version Service (in `version-service/`): `mvn spring-boot:run`
 - Collaboration Service (in `collaboration-service/`)
   - `SPRING_BOOT_URL=http://localhost:8080` `npm run dev`
 - Frontend (in `frontend/`)
