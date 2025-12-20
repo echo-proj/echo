@@ -6,16 +6,11 @@ import com.echoproject.echo.document.domain.DocumentAccessControl;
 import com.echoproject.echo.document.dto.CreateVersionRequest;
 import com.echoproject.echo.document.dto.VersionContentResponse;
 import com.echoproject.echo.document.dto.VersionResponse;
-import com.echoproject.echo.document.models.Document;
-import com.echoproject.echo.document.models.DocumentContent;
 import com.echoproject.echo.document.models.DocumentVersion;
-import com.echoproject.echo.document.repository.DocumentCollaboratorRepository;
-import com.echoproject.echo.document.repository.DocumentContentRepository;
-import com.echoproject.echo.document.repository.DocumentRepository;
 import com.echoproject.echo.document.repository.DocumentVersionRepository;
 import com.echoproject.echo.notification.client.CollaborationServiceClient;
-import com.echoproject.echo.user.models.User;
-import com.echoproject.echo.user.repository.UserRepository;
+import com.echoproject.echo.document.client.DocumentServiceClient;
+import com.echoproject.echo.user.client.UserServiceClient;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -35,55 +30,61 @@ public class DocumentVersionService {
   private static final int MAX_VERSIONS_PER_DOCUMENT = 15;
 
   private final DocumentVersionRepository versionRepository;
-  private final DocumentRepository documentRepository;
-  private final DocumentContentRepository contentRepository;
-  private final DocumentCollaboratorRepository collaboratorRepository;
-  private final UserRepository userRepository;
   private final CollaborationServiceClient collabClient;
+  private final UserServiceClient userClient;
+  private final DocumentServiceClient documentClient;
 
   @Transactional
   public VersionResponse createVersion(UUID userId, UUID documentId, CreateVersionRequest request) {
-    Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) throw new BadRequestException("Access denied");
-    DocumentContent content = contentRepository.findByDocumentId(documentId).orElseThrow(() -> new BadRequestException("Document has no content to version"));
+    if (!validateAccess(documentId)) throw new BadRequestException("Access denied");
+    // Pull latest content from document-service
+    // Reuse existing endpoints via DocumentServiceClient? For now, read from our DB if still present, else consider adding a GET client
+    String auth = getCurrentAuthorization();
+    byte[] state = documentClient.getContent(documentId, auth);
+    if (state == null || state.length == 0) throw new BadRequestException("Document has no content to version");
     long versionCount = versionRepository.countByDocumentId(documentId);
     if (versionCount >= MAX_VERSIONS_PER_DOCUMENT) deleteOldestVersion(documentId);
     Integer nextVersionNumber = versionRepository.findMaxVersionNumberByDocumentId(documentId).map(max -> max + 1).orElse(1);
-    User createdBy = userRepository.findById(userId).orElseThrow();
-    DocumentVersion version = new DocumentVersion(document, nextVersionNumber, content.getState(), createdBy, request.getLabel());
+    DocumentVersion version = new DocumentVersion(documentId, nextVersionNumber, state, userId, request.getLabel());
     versionRepository.save(version);
     return toVersionResponse(version);
   }
 
   @Transactional(readOnly = true)
   public List<VersionResponse> getDocumentVersions(UUID userId, UUID documentId) {
-    Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) throw new BadRequestException("Access denied");
-    return versionRepository.findByDocumentIdOrderByVersionNumberDesc(documentId).stream().map(this::toVersionResponse).toList();
+    if (!validateAccess(documentId)) throw new BadRequestException("Access denied");
+    List<DocumentVersion> versions = versionRepository.findByDocumentIdOrderByVersionNumberDesc(documentId);
+    Set<UUID> creatorIds = versions.stream().map(DocumentVersion::getCreatedById).collect(Collectors.toSet());
+    var usernames = userClient.getUsernames(creatorIds);
+    return versions.stream().map(v ->
+        new VersionResponse(
+            v.getId(), v.getDocumentId(), v.getVersionNumber(), v.getLabel(),
+            usernames.getOrDefault(v.getCreatedById(), null),
+            v.getCreatedAt()
+        )
+    ).toList();
   }
 
   @Transactional(readOnly = true)
   public VersionContentResponse getVersionContent(UUID userId, UUID documentId, UUID versionId) {
-    Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) throw new BadRequestException("Access denied");
+    if (!validateAccess(documentId)) throw new BadRequestException("Access denied");
     DocumentVersion version = versionRepository.findById(versionId).orElseThrow(() -> new NotFoundException("Version not found"));
-    if (!version.getDocument().getId().equals(documentId)) throw new BadRequestException("Version does not belong to this document");
-    return toVersionContentResponse(version);
+    if (!version.getDocumentId().equals(documentId)) throw new BadRequestException("Version does not belong to this document");
+    var usernames = userClient.getUsernames(Set.of(version.getCreatedById()));
+    return new VersionContentResponse(
+        version.getId(), version.getDocumentId(), version.getVersionNumber(), version.getState(), version.getLabel(),
+        usernames.getOrDefault(version.getCreatedById(), null),
+        version.getCreatedAt()
+    );
   }
 
   @Transactional
   public void restoreVersion(UUID userId, UUID documentId, UUID versionId) {
-    Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) throw new BadRequestException("Access denied");
+    if (!validateAccess(documentId)) throw new BadRequestException("Access denied");
     DocumentVersion version = versionRepository.findById(versionId).orElseThrow(() -> new NotFoundException("Version not found"));
-    if (!version.getDocument().getId().equals(documentId)) throw new BadRequestException("Version does not belong to this document");
-    DocumentContent content = contentRepository.findByDocumentId(documentId).orElseGet(() -> new DocumentContent(document));
-    content.setState(version.getState());
-    contentRepository.save(content);
+    if (!version.getDocumentId().equals(documentId)) throw new BadRequestException("Version does not belong to this document");
+    String auth = getCurrentAuthorization();
+    documentClient.overwriteContent(documentId, version.getState(), auth);
     TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
       @Override public void afterCommit() { collabClient.reloadDocument(documentId.toString()); }
     });
@@ -91,10 +92,11 @@ public class DocumentVersionService {
 
   @Transactional
   public void deleteVersion(UUID userId, UUID documentId, UUID versionId) {
-    Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    if (!DocumentAccessControl.isOwner(userId, document.getOwner().getId())) throw new BadRequestException("Only the owner can delete versions");
+    // Verify owner via document-service
+    UUID ownerId = getOwnerId(documentId);
+    if (!ownerId.equals(userId)) throw new BadRequestException("Only the owner can delete versions");
     DocumentVersion version = versionRepository.findById(versionId).orElseThrow(() -> new NotFoundException("Version not found"));
-    if (!version.getDocument().getId().equals(documentId)) throw new BadRequestException("Version does not belong to this document");
+    if (!version.getDocumentId().equals(documentId)) throw new BadRequestException("Version does not belong to this document");
     versionRepository.delete(version);
   }
 
@@ -104,23 +106,67 @@ public class DocumentVersionService {
   }
 
   private VersionResponse toVersionResponse(DocumentVersion version) {
+    var usernames = userClient.getUsernames(Set.of(version.getCreatedById()));
     return new VersionResponse(
         version.getId(),
-        version.getDocument().getId(),
+        version.getDocumentId(),
         version.getVersionNumber(),
         version.getLabel(),
-        version.getCreatedBy().getUsername(),
+        usernames.getOrDefault(version.getCreatedById(), null),
         version.getCreatedAt());
   }
 
   private VersionContentResponse toVersionContentResponse(DocumentVersion version) {
+    var usernames = userClient.getUsernames(Set.of(version.getCreatedById()));
     return new VersionContentResponse(
         version.getId(),
-        version.getDocument().getId(),
+        version.getDocumentId(),
         version.getVersionNumber(),
         version.getState(),
         version.getLabel(),
-        version.getCreatedBy().getUsername(),
+        usernames.getOrDefault(version.getCreatedById(), null),
         version.getCreatedAt());
+  }
+
+  private boolean validateAccess(UUID documentId) {
+    try {
+      String auth = getCurrentAuthorization();
+      String url = "http://gateway:8080/api/documents/validate-access";
+      org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+      headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+      if (auth != null) headers.set("Authorization", auth);
+      var body = java.util.Map.of("documentId", documentId);
+      var entity = new org.springframework.http.HttpEntity<>(body, headers);
+      var rest = new org.springframework.web.client.RestTemplate();
+      var res = rest.postForEntity(url, entity, java.util.Map.class);
+      Object ok = res.getBody() != null ? ((java.util.Map<?,?>)res.getBody()).get("hasAccess") : null;
+      return Boolean.TRUE.equals(ok);
+    } catch (Exception e) { return false; }
+  }
+
+  private UUID getOwnerId(UUID documentId) {
+    try {
+      String auth = getCurrentAuthorization();
+      String url = "http://gateway:8080/api/internal/documents/" + documentId + "/owner";
+      org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+      if (auth != null) headers.set("Authorization", auth);
+      var entity = new org.springframework.http.HttpEntity<>(headers);
+      var rest = new org.springframework.web.client.RestTemplate();
+      var res = rest.exchange(url, org.springframework.http.HttpMethod.GET, entity, java.util.Map.class);
+      var body = res.getBody();
+      if (body != null && body.get("ownerId") != null) return java.util.UUID.fromString(String.valueOf(body.get("ownerId")));
+    } catch (Exception ignored) {}
+    throw new NotFoundException("Document not found");
+  }
+
+  private String getCurrentAuthorization() {
+    try {
+      var attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+      if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes sra) {
+        String h = sra.getRequest().getHeader("Authorization");
+        return h;
+      }
+    } catch (Exception ignored) {}
+    return null;
   }
 }

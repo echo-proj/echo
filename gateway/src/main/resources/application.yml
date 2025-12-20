@@ -35,6 +35,11 @@ spring:
           predicates:
             - Path=/api/auth/**, /api/profile/**
 
+        - id: user-service-internal
+          uri: http://user-service:8081
+          predicates:
+            - Path=/api/internal/users/**
+
         - id: version-service
           uri: http://version-service:8083
           predicates:
@@ -44,6 +49,11 @@ spring:
           uri: http://document-service:8082
           predicates:
             - Path=/api/documents/**, /api/notifications/**
+
+        - id: document-service-internal
+          uri: http://document-service:8082
+          predicates:
+            - Path=/api/internal/documents/**
 
         - id: collab-service-http
           uri: http://collaboration-service:3001

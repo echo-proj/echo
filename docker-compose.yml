@@ -10,6 +10,7 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/init/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - echo-network
     healthcheck:
@@ -45,7 +46,7 @@ services:
       dockerfile: Dockerfile
     container_name: echo-user-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/userdb
       SPRING_DATASOURCE_USERNAME: myuser
       SPRING_DATASOURCE_PASSWORD: secret
       JWT_SECRET: dev-app-secret
@@ -71,7 +72,7 @@ services:
       dockerfile: Dockerfile
     container_name: echo-document-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/docdb
       SPRING_DATASOURCE_USERNAME: myuser
       SPRING_DATASOURCE_PASSWORD: secret
       JWT_SECRET: dev-app-secret
@@ -98,7 +99,7 @@ services:
       dockerfile: Dockerfile
     container_name: echo-version-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/versiondb
       SPRING_DATASOURCE_USERNAME: myuser
       SPRING_DATASOURCE_PASSWORD: secret
       JWT_SECRET: dev-app-secret

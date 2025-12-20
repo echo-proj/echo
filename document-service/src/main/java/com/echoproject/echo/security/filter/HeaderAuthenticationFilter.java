@@ -1,8 +1,7 @@
 package com.echoproject.echo.security.filter;
 
 import com.echoproject.echo.security.service.CustomUserDetails;
-import com.echoproject.echo.user.models.User;
-import com.echoproject.echo.user.repository.UserRepository;
+import com.echoproject.echo.user.client.UserServiceClient;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,10 +18,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
-  private final UserRepository userRepository;
+  private final UserServiceClient userClient;
 
-  public HeaderAuthenticationFilter(UserRepository userRepository) {
-    this.userRepository = userRepository;
+  public HeaderAuthenticationFilter(UserServiceClient userClient) {
+    this.userClient = userClient;
   }
 
   @Override
@@ -31,10 +30,10 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
     String username = request.getHeader("X-Username");
     if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-      Optional<User> userOpt = userRepository.findByUsername(username);
+      var userOpt = userClient.getByUsername(username);
       if (userOpt.isPresent()) {
-        User user = userOpt.get();
-        CustomUserDetails details = new CustomUserDetails(user.getId(), user.getUsername(), user.getPassword(), new ArrayList<>());
+        var u = userOpt.get();
+        CustomUserDetails details = new CustomUserDetails(u.id(), u.username(), "", new ArrayList<>());
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -50,4 +49,3 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
     return path.startsWith("/api/health/") || path.startsWith("/api/auth/");
   }
 }
-

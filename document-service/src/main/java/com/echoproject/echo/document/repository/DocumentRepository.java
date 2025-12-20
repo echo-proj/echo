@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
-  @Query("SELECT d FROM Document d WHERE d.owner.id = :userId OR d.id IN (SELECT dc.document.id FROM DocumentCollaborator dc WHERE dc.user.id = :userId)")
+  @Query("SELECT d FROM Document d WHERE d.ownerId = :userId OR d.id IN (SELECT dc.document.id FROM DocumentCollaborator dc WHERE dc.userId = :userId)")
   List<Document> findAllAccessibleByUser(UUID userId);
 }
-

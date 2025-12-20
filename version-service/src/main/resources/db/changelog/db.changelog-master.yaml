@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-document-versions
+      author: echo
+      changes:
+        - createTable:
+            tableName: document_versions
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_number
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: BYTEA
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: label
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false

@@ -30,8 +30,10 @@ export async function validateUserToken(token) {
           },
         }
     );
-    return { valid: true, userId: response.data.userId, username: response.data.username };
-  } catch {
+    const userId = response.data && (response.data.id || response.data.userId);
+    const username = response.data && response.data.username;
+    return { valid: true, userId, username };
+  } catch (e) {
     return { valid: false };
   }
 }

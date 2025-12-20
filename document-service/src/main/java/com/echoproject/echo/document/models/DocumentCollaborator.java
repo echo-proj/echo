@@ -1,6 +1,5 @@
 package com.echoproject.echo.document.models;
 
-import com.echoproject.echo.user.models.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,16 +27,15 @@ public class DocumentCollaborator {
   @JoinColumn(name = "document_id", nullable = false)
   private Document document;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @Column(name = "user_id", nullable = false)
+  private UUID userId;
 
   @CreationTimestamp
   @Column(name = "added_at", nullable = false)
   private LocalDateTime addedAt;
 
-  public DocumentCollaborator(Document document, User user) {
+  public DocumentCollaborator(Document document, UUID userId) {
     this.document = document;
-    this.user = user;
+    this.userId = userId;
   }
 }

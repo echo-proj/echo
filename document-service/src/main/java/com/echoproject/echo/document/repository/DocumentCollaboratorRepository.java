@@ -12,7 +12,6 @@ public interface DocumentCollaboratorRepository extends JpaRepository<DocumentCo
   List<DocumentCollaborator> findByDocumentId(UUID documentId);
 
   @Modifying
-  @Query("DELETE FROM DocumentCollaborator dc WHERE dc.document.id = :documentId AND dc.user.id = :userId")
+  @Query("DELETE FROM DocumentCollaborator dc WHERE dc.document.id = :documentId AND dc.userId = :userId")
   void deleteByDocumentIdAndUserId(UUID documentId, UUID userId);
 }
-

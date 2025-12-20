@@ -1,6 +1,5 @@
 package com.echoproject.echo.document.models;
 
-import com.echoproject.echo.user.models.User;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -16,17 +15,15 @@ import lombok.Setter;
 public class Document {
   @Id private UUID id;
   @Column(nullable = false) private String title;
-  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "owner_id", nullable = false)
-  private User owner;
+  @Column(name = "owner_id", nullable = false) private UUID ownerId;
   @Column(name = "created_at", nullable = false) private Instant createdAt;
   @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
-  public Document(String title, User owner) {
+  public Document(String title, UUID ownerId) {
     this.id = UUID.randomUUID();
     this.title = title;
-    this.owner = owner;
+    this.ownerId = ownerId;
     this.createdAt = Instant.now();
     this.updatedAt = Instant.now();
   }
 }
-

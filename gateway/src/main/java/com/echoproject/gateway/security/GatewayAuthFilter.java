@@ -23,13 +23,18 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
     String path = exchange.getRequest().getURI().getPath();
+    String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    boolean ws = isWebSocketUpgrade(exchange);
+    boolean excluded = isExcluded(path);
 
-    // Skip auth header injection for health and auth endpoints
-    if (isExcluded(path)) {
+    if (excluded) {
       return chain.filter(exchange);
     }
 
-    String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    if (ws && path.startsWith("/ws/")) {
+      return chain.filter(exchange);
+    }
+
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       String token = authHeader.substring(7);
       String username = jwtUtil.validateTokenAndGetUsername(token);
@@ -43,11 +48,12 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
         return exchange.getResponse().setComplete();
       }
     }
-
-    return chain.filter(exchange);
+    exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+    return exchange.getResponse().setComplete();
   }
 
   private boolean isExcluded(String path) {
+    if (!path.startsWith("/api/")) return true;
     if (MATCHER.match("/api/health/**", path)) return true;
     if (MATCHER.match("/api/auth/login", path)) return true;
     if (MATCHER.match("/api/auth/register", path)) return true;
@@ -57,5 +63,19 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
   @Override
   public int getOrder() {
     return -100; // Run early
+  }
+
+  private boolean isWebSocketUpgrade(ServerWebExchange exchange) {
+    String connection = header(exchange, "Connection");
+    String upgrade = header(exchange, "Upgrade");
+    return connection != null && connection.toLowerCase().contains("upgrade") &&
+        upgrade != null && upgrade.equalsIgnoreCase("websocket");
+  }
+
+  private String header(ServerWebExchange ex, String name) {
+    try {
+      var values = ex.getRequest().getHeaders().get(name);
+      return (values != null && !values.isEmpty()) ? values.get(0) : null;
+    } catch (Exception e) { return null; }
   }
 }

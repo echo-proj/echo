@@ -1,6 +1,5 @@
 package com.echoproject.echo.document.models;
 
-import com.echoproject.echo.user.models.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,9 +19,8 @@ public class DocumentVersion {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "document_id", nullable = false)
-  private Document document;
+  @Column(name = "document_id", nullable = false)
+  private UUID documentId;
 
   @Column(name = "version_number", nullable = false)
   private Integer versionNumber;
@@ -30,9 +28,8 @@ public class DocumentVersion {
   @Column(name = "state", nullable = false, columnDefinition = "bytea")
   private byte[] state;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "created_by", nullable = false)
-  private User createdBy;
+  @Column(name = "created_by", nullable = false)
+  private UUID createdById;
 
   @Column(name = "label")
   private String label;
@@ -41,11 +38,11 @@ public class DocumentVersion {
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
 
-  public DocumentVersion(Document document, Integer versionNumber, byte[] state, User createdBy, String label) {
-    this.document = document;
+  public DocumentVersion(UUID documentId, Integer versionNumber, byte[] state, UUID createdById, String label) {
+    this.documentId = documentId;
     this.versionNumber = versionNumber;
     this.state = state;
-    this.createdBy = createdBy;
+    this.createdById = createdById;
     this.label = label;
   }
 }

@@ -1,6 +1,81 @@
 databaseChangeLog:
-  - include:
-      file: db/changelog/changes/001-initial-schema.yaml
-  - include:
-      file: db/changelog/changes/002-notifications-schema.yaml
+  - changeSet:
+      id: 001-create-users
+      author: echo
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
 
+  - changeSet:
+      id: 002-create-user-profiles
+      author: echo
+      changes:
+        - createTable:
+            tableName: user_profiles
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: full_name
+                  type: VARCHAR(255)
+              - column:
+                  name: phone_number
+                  type: VARCHAR(50)
+              - column:
+                  name: profile_picture
+                  type: VARCHAR(500)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: user_profiles
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_profiles_user_id
+            onDelete: CASCADE

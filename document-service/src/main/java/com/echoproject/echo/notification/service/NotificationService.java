@@ -18,15 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NotificationService {
   private final NotificationRepository repository;
-  private final com.echoproject.echo.user.repository.UserRepository userRepository;
+  private final com.echoproject.echo.user.client.UserServiceClient userClient;
 
   @Transactional(readOnly = true)
   public List<NotificationResponse> getUserNotifications(UUID userId) {
     List<Notification> notifications = repository.findByRecipient(userId);
     // Batch-load actor usernames to avoid N+1
     Set<UUID> actorIds = notifications.stream().map(Notification::getActorId).collect(Collectors.toSet());
-    Map<UUID, String> usernames = userRepository.findAllById(actorIds)
-        .stream().collect(Collectors.toMap(u -> u.getId(), u -> u.getUsername()));
+    Map<UUID, String> usernames = userClient.getUsernames(actorIds);
 
     return notifications.stream()
         .map(n -> toResponse(n, usernames.get(n.getActorId())))

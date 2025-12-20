@@ -1,0 +1,163 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-documents
+      author: echo
+      changes:
+        - createTable:
+            tableName: documents
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: owner_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-create-document-content
+      author: echo
+      changes:
+        - createTable:
+            tableName: document_content
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: state
+                  type: BYTEA
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: document_content
+            baseColumnNames: document_id
+            referencedTableName: documents
+            referencedColumnNames: id
+            constraintName: fk_document_content_document_id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 003-create-document-collaborators
+      author: echo
+      changes:
+        - createTable:
+            tableName: document_collaborators
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: added_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: document_collaborators
+            columnNames: document_id, user_id
+            constraintName: uk_document_collaborators_document_user
+        - addForeignKeyConstraint:
+            baseTableName: document_collaborators
+            baseColumnNames: document_id
+            referencedTableName: documents
+            referencedColumnNames: id
+            constraintName: fk_document_collaborators_document_id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 004-create-notifications
+      author: echo
+      changes:
+        - createTable:
+            tableName: notifications
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: recipient_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: document_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actor_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: read
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false

@@ -35,7 +35,8 @@ function clearDocumentFromMemory(documents, documentId) {
 
 export function registerDocumentReloadEndpoint(app, documents) {
   app.post('/reload-document/:documentId', (req, res) => {
-    const ok = clearDocumentFromMemory(documents, req.params.documentId);
+    const { documentId } = req.params;
+    const ok = clearDocumentFromMemory(documents, documentId);
     res.status(200).json({ success: true, cleared: ok });
   });
 }

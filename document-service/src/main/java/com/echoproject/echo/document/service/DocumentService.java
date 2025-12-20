@@ -2,7 +2,6 @@ package com.echoproject.echo.document.service;
 
 import com.echoproject.echo.common.exception.BadRequestException;
 import com.echoproject.echo.common.exception.NotFoundException;
-import com.echoproject.echo.document.domain.CollaboratorFilter;
 import com.echoproject.echo.document.domain.DocumentAccessControl;
 import com.echoproject.echo.document.dto.AddCollaboratorRequest;
 import com.echoproject.echo.document.dto.CollaboratorResponse;
@@ -20,9 +19,7 @@ import com.echoproject.echo.notification.client.CollaborationServiceClient;
 import com.echoproject.echo.notification.models.NotificationType;
 import com.echoproject.echo.notification.service.NotificationService;
 import com.echoproject.echo.user.dto.UserSearchResponse;
-import com.echoproject.echo.user.models.User;
-import com.echoproject.echo.user.models.UserProfile;
-import com.echoproject.echo.user.repository.UserRepository;
+import com.echoproject.echo.user.client.UserServiceClient;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -39,30 +36,33 @@ public class DocumentService {
   private final DocumentRepository documentRepository;
   private final DocumentCollaboratorRepository collaboratorRepository;
   private final DocumentContentRepository contentRepository;
-  private final UserRepository userRepository;
+  private final UserServiceClient userClient;
   private final NotificationService notificationService;
   private final CollaborationServiceClient collaborationServiceClient;
 
   @Transactional
   public DocumentResponse createDocument(UUID userId, CreateDocumentRequest request) {
-    User owner = userRepository.findById(userId).orElseThrow();
-    Document document = new Document(request.getTitle(), owner);
+    Document document = new Document(request.getTitle(), userId);
     documentRepository.save(document);
-    return toResponseWithoutCollaborators(document);
+    var sum = userClient.getSummaries(java.util.Set.of(userId)).get(userId);
+    String ownerUsername = sum != null ? sum.username() : null;
+    return toResponseWithoutCollaborators(document, ownerUsername);
   }
 
   @Transactional(readOnly = true)
   public List<DocumentResponse> getUserDocuments(UUID userId) {
     List<Document> documents = documentRepository.findAllAccessibleByUser(userId);
-    return documents.stream().map(this::toResponseWithoutCollaborators).toList();
+    var ownerIds = documents.stream().map(Document::getOwnerId).collect(Collectors.toSet());
+    var ownerSummaries = userClient.getSummaries(ownerIds);
+    return documents.stream().map(d -> toResponseWithoutCollaborators(d, ownerSummaries.get(d.getOwnerId()) != null ? ownerSummaries.get(d.getOwnerId()).username() : null)).toList();
   }
 
   @Transactional(readOnly = true)
   public DocumentResponse getDocument(UUID userId, UUID documentId) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
     List<DocumentCollaborator> documentCollaborators = collaboratorRepository.findByDocumentId(documentId);
-    Set<UUID> collaboratorIds = documentCollaborators.stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+    Set<UUID> collaboratorIds = documentCollaborators.stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwnerId(), collaboratorIds)) {
       throw new BadRequestException("Access denied");
     }
     return toResponseWithCollaborators(document, documentCollaborators);
@@ -71,7 +71,7 @@ public class DocumentService {
   @Transactional
   public void deleteDocument(UUID userId, UUID documentId) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    if (!DocumentAccessControl.isOwner(userId, document.getOwner().getId())) {
+    if (!DocumentAccessControl.isOwner(userId, document.getOwnerId())) {
       throw new BadRequestException("Only the owner can delete the document");
     }
     documentRepository.delete(document);
@@ -80,8 +80,8 @@ public class DocumentService {
   @Transactional
   public DocumentResponse updateDocument(UUID userId, UUID documentId, UpdateDocumentRequest request) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwnerId(), collaboratorIds)) {
       throw new BadRequestException("Access denied");
     }
     document.setTitle(request.getTitle());
@@ -93,27 +93,27 @@ public class DocumentService {
   @Transactional
   public void addCollaborator(UUID userId, UUID documentId, AddCollaboratorRequest request) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    if (!DocumentAccessControl.isOwner(userId, document.getOwner().getId())) {
+    if (!DocumentAccessControl.isOwner(userId, document.getOwnerId())) {
       throw new BadRequestException("Only the owner can add collaborators");
     }
-    User collaborator = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new NotFoundException("Collaborator user not found"));
-    Set<UUID> existingCollaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.canAddCollaborator(collaborator.getId(), document.getOwner().getId(), existingCollaboratorIds)) {
+    var coll = userClient.getByUsername(request.getUsername()).orElseThrow(() -> new NotFoundException("Collaborator user not found"));
+    Set<UUID> existingCollaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
+    if (!DocumentAccessControl.canAddCollaborator(coll.id(), document.getOwnerId(), existingCollaboratorIds)) {
       throw new BadRequestException("Cannot add this user as a collaborator");
     }
-    DocumentCollaborator documentCollaborator = new DocumentCollaborator(document, collaborator);
+    DocumentCollaborator documentCollaborator = new DocumentCollaborator(document, coll.id());
     collaboratorRepository.save(documentCollaborator);
-    notificationService.createNotification(collaborator.getId(), NotificationType.COLLABORATOR_ADDED, documentId, userId);
-    collaborationServiceClient.broadcastDocumentUpdate(List.of(collaborator.getId()), documentId);
+    notificationService.createNotification(coll.id(), NotificationType.COLLABORATOR_ADDED, documentId, userId);
+    collaborationServiceClient.broadcastDocumentUpdate(List.of(coll.id()), documentId);
   }
 
   @Transactional
   public void removeCollaborator(UUID userId, UUID documentId, UUID collaboratorUserId) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    if (!DocumentAccessControl.isOwner(userId, document.getOwner().getId())) {
+    if (!DocumentAccessControl.isOwner(userId, document.getOwnerId())) {
       throw new BadRequestException("Only the owner can remove collaborators");
     }
-    Set<UUID> existingCollaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
+    Set<UUID> existingCollaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
     if (!DocumentAccessControl.isCollaborator(collaboratorUserId, existingCollaboratorIds)) {
       throw new NotFoundException("Collaborator not found");
     }
@@ -126,30 +126,31 @@ public class DocumentService {
   public List<UserSearchResponse> searchAvailableCollaborators(UUID userId, UUID documentId, String query) {
     if (query == null || query.trim().isEmpty()) return List.of();
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwnerId(), collaboratorIds)) {
       throw new BadRequestException("Access denied");
     }
-    List<User> users = userRepository.searchByUsername(query.trim());
-    List<User> availableUsers = CollaboratorFilter.filterAvailableCollaborators(users, document.getOwner().getId(), collaboratorIds);
-    return availableUsers.stream().map(user -> {
-      UserProfile profile = user.getProfile();
-      return new UserSearchResponse(user.getId(), user.getUsername(), profile != null ? profile.getFullName() : null, profile != null ? profile.getProfilePicture() : null);
-    }).limit(10).toList();
+    var results = userClient.search(query.trim());
+    UUID ownerId = document.getOwnerId();
+    return results.stream()
+        .filter(r -> !r.id().equals(ownerId) && !collaboratorIds.contains(r.id()))
+        .limit(10)
+        .map(r -> new UserSearchResponse(r.id(), r.username(), r.fullName(), r.profilePicture()))
+        .toList();
   }
 
   @Transactional(readOnly = true)
   public boolean validateDocumentAccess(UUID userId, UUID documentId) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    return DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds);
+    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
+    return DocumentAccessControl.hasAccess(userId, document.getOwnerId(), collaboratorIds);
   }
 
   @Transactional
   public void saveDocumentContent(UUID userId, UUID documentId, byte[] state) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwnerId(), collaboratorIds)) {
       throw new BadRequestException("Access denied");
     }
     DocumentContent content = contentRepository.findByDocumentId(documentId).orElseGet(() -> new DocumentContent(document));
@@ -160,8 +161,8 @@ public class DocumentService {
   @Transactional(readOnly = true)
   public DocumentContentResponse getDocumentContent(UUID userId, UUID documentId) {
     Document document = documentRepository.findById(documentId).orElseThrow(() -> new NotFoundException("Document not found"));
-    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUser().getId()).collect(Collectors.toSet());
-    if (!DocumentAccessControl.hasAccess(userId, document.getOwner().getId(), collaboratorIds)) {
+    Set<UUID> collaboratorIds = collaboratorRepository.findByDocumentId(documentId).stream().map(dc -> dc.getUserId()).collect(Collectors.toSet());
+    if (!DocumentAccessControl.hasAccess(userId, document.getOwnerId(), collaboratorIds)) {
       throw new BadRequestException("Access denied");
     }
     DocumentContent content = contentRepository.findByDocumentId(documentId).orElse(null);
@@ -169,15 +170,20 @@ public class DocumentService {
     return new DocumentContentResponse(documentId, content.getState(), content.getUpdatedAt());
   }
 
-  private DocumentResponse toResponseWithoutCollaborators(Document document) {
-    return new DocumentResponse(document.getId(), document.getTitle(), document.getOwner().getUsername(), Collections.emptyList(), document.getCreatedAt(), document.getUpdatedAt());
+  private DocumentResponse toResponseWithoutCollaborators(Document document, String ownerUsername) {
+    return new DocumentResponse(document.getId(), document.getTitle(), ownerUsername, Collections.emptyList(), document.getCreatedAt(), document.getUpdatedAt());
   }
 
   private DocumentResponse toResponseWithCollaborators(Document document, List<DocumentCollaborator> documentCollaborators) {
-    List<CollaboratorResponse> collaborators = documentCollaborators.stream().map(dc -> {
-      User user = dc.getUser();
-      return new CollaboratorResponse(user.getId(), user.getUsername(), user.getProfile() != null ? user.getProfile().getFullName() : null, user.getProfile() != null ? user.getProfile().getProfilePicture() : null);
+    List<UUID> collaboratorIds = documentCollaborators.stream().map(DocumentCollaborator::getUserId).toList();
+    Set<UUID> fetchIds = new java.util.HashSet<>(collaboratorIds);
+    fetchIds.add(document.getOwnerId());
+    var summaries = userClient.getSummaries(fetchIds);
+    List<CollaboratorResponse> collaborators = collaboratorIds.stream().map(id -> {
+      var s = summaries.get(id);
+      return new CollaboratorResponse(id, s != null ? s.username() : null, s != null ? s.fullName() : null, s != null ? s.profilePicture() : null);
     }).toList();
-    return new DocumentResponse(document.getId(), document.getTitle(), document.getOwner().getUsername(), collaborators, document.getCreatedAt(), document.getUpdatedAt());
+    String ownerUsername = summaries.get(document.getOwnerId()) != null ? summaries.get(document.getOwnerId()).username() : null;
+    return new DocumentResponse(document.getId(), document.getTitle(), ownerUsername, collaborators, document.getCreatedAt(), document.getUpdatedAt());
   }
 }

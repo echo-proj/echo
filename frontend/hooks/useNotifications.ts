@@ -79,30 +79,29 @@ export const useNotificationWebSocket = () => {
       ws.onopen = () => {
         setIsConnected(true);
         globalConnecting = false;
+
       };
 
       ws.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
+        const message = JSON.parse(event.data);
 
-          if (message.type === 'DOCUMENT_LIST_UPDATE') {
-            queryClient.invalidateQueries({ queryKey: ['documents'] });
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
-            queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
-            const now = Date.now();
-            if (now - lastDocUpdateToastAt > 1500) {
-              toast.info('New notification', {
-                description: 'Your shared documents were updated.',
-              });
-              lastDocUpdateToastAt = now;
-            }
+        if (message.type === 'DOCUMENT_LIST_UPDATE') {
+          queryClient.invalidateQueries({ queryKey: ['documents'] });
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
+          const now = Date.now();
+          if (now - lastDocUpdateToastAt > 1500) {
+            toast.info('New notification', {
+              description: 'Your shared documents were updated.',
+            });
+            lastDocUpdateToastAt = now;
           }
-        } catch (e) {
-          console.error('[WS] Failed to parse notification message:', e);
         }
       };
 
-      ws.onclose = (_) => {
+      ws.onerror = () => {};
+
+      ws.onclose = () => {
         setIsConnected(false);
         if (globalWs === ws) globalWs = null;
 
