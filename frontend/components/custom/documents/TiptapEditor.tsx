@@ -54,13 +54,6 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(fu
   const showOverlay = useSmoothLoading(blocked, 350);
 
   useEffect(() => {
-    if (!provider) return;
-    const reset = () => setSessionId((v) => v + 1);
-    provider.on('connection-close', reset);
-    return () => { try { provider.off('connection-close', reset); } catch {} };
-  }, [provider]);
-
-  useEffect(() => {
     if (!editor) return;
     if (connected && !synced) {
       const t = window.setTimeout(() => setSessionId((v) => v + 1), 6000);
