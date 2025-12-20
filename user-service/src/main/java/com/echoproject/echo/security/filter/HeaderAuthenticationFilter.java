@@ -45,7 +45,8 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getRequestURI();
-    return path.startsWith("/api/health/") || path.startsWith("/api/auth/");
+    if (path.startsWith("/api/health/")) return true;
+    if (path.equals("/api/auth/login") || path.equals("/api/auth/register")) return true;
+    return false;
   }
 }
-

@@ -38,6 +38,9 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
             .headers(httpHeaders -> httpHeaders.set("X-Username", username))
             .build();
         return chain.filter(exchange.mutate().request(mutated).build());
+      } else {
+        exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+        return exchange.getResponse().setComplete();
       }
     }
 
@@ -45,7 +48,10 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
   }
 
   private boolean isExcluded(String path) {
-    return MATCHER.match("/api/health/**", path) || MATCHER.match("/api/auth/**", path);
+    if (MATCHER.match("/api/health/**", path)) return true;
+    if (MATCHER.match("/api/auth/login", path)) return true;
+    if (MATCHER.match("/api/auth/register", path)) return true;
+    return false;
   }
 
   @Override
@@ -53,4 +59,3 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
     return -100; // Run early
   }
 }
-
