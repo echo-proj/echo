@@ -1,6 +1,6 @@
 package com.echoproject.echo.security.config;
 
-import com.echoproject.echo.security.filter.JwtAuthenticationFilter;
+import com.echoproject.echo.security.filter.HeaderAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -21,10 +21,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final HeaderAuthenticationFilter headerAuthenticationFilter;
 
-  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+  public SecurityConfig(HeaderAuthenticationFilter headerAuthenticationFilter) {
+    this.headerAuthenticationFilter = headerAuthenticationFilter;
   }
 
   @Bean
@@ -38,7 +38,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/login", "/api/auth/register", "/api/health/**").permitAll()
             .anyRequest().authenticated())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        .addFilterBefore(headerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
 
@@ -52,4 +52,3 @@ public class SecurityConfig {
     return config.getAuthenticationManager();
   }
 }
-

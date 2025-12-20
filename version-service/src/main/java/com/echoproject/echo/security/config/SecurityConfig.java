@@ -1,6 +1,6 @@
 package com.echoproject.echo.security.config;
 
-import com.echoproject.echo.security.filter.JwtAuthenticationFilter;
+import com.echoproject.echo.security.filter.HeaderAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -20,8 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-  private final JwtAuthenticationFilter jwtAuthenticationFilter;
-  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) { this.jwtAuthenticationFilter = jwtAuthenticationFilter; }
+  private final HeaderAuthenticationFilter headerAuthenticationFilter;
+  public SecurityConfig(HeaderAuthenticationFilter headerAuthenticationFilter) { this.headerAuthenticationFilter = headerAuthenticationFilter; }
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
@@ -29,7 +29,7 @@ public class SecurityConfig {
         .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)).accessDeniedHandler(new AccessDeniedHandlerImpl()))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth.requestMatchers("/api/health/**").permitAll().anyRequest().authenticated())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        .addFilterBefore(headerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
   @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
