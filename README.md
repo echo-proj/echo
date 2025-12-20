@@ -24,7 +24,7 @@ Real-time collaborative text editing with versioning.
 - User Service: `http://user-service:8081` (internal)
 - Document Service: `http://document-service:8082` (internal)
 - Version Service: `http://version-service:8083` (internal)
-- Collab WS: `ws://localhost:3001`
+- Collab WS (via gateway): `ws://localhost:8080/ws`
 - Frontend: `http://localhost:3000`
 - Postgres: `localhost:5433`
 
@@ -56,7 +56,7 @@ docker compose up -d
 2) Frontend (in `frontend/`)
 ```bash
 echo "NEXT_PUBLIC_API_URL=http://localhost:8080" >> .env.local
-echo "NEXT_PUBLIC_WS_URL=ws://localhost:3001" >> .env.local
+echo "NEXT_PUBLIC_WS_URL=http://localhost:8080/ws" >> .env.local
 npm install
 npm run dev
 ```

@@ -50,6 +50,13 @@ spring:
           predicates:
             - Path=/notify, /reload-document/**, /health
 
+        - id: collab-service-ws
+          uri: ws://collaboration-service:3001
+          predicates:
+            - Path=/ws/**
+          filters:
+            - StripPrefix=1
+
 management:
   endpoints:
     web:
