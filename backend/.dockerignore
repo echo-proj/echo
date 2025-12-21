@@ -1,7 +1,0 @@
-target/
-.mvn/
-.git/
-.gitignore
-*.md
-Dockerfile
-.dockerignore
